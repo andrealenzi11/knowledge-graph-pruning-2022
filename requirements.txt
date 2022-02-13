@@ -1,0 +1,2 @@
+networkx==2.6.3
+pykeen==1.7.0
