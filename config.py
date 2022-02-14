@@ -9,11 +9,14 @@ OBJ = "object"
 
 
 # ==================== folders ==================== #
-RESOURCES_DIR = "/home/andrea/resources/graph_pruning/"
+RESOURCES_DIR = os.path.join(os.environ['HOME'], "resources", "graph_pruning")
 
 DATASETS_DIR = os.path.join(RESOURCES_DIR, "datasets")
 if not os.path.isdir(DATASETS_DIR):
     os.makedirs(DATASETS_DIR)
+
+# repo with data
+# https://github.com/villmow/datasets_knowledge_embedding
 
 MODELS_DIR = os.path.join(RESOURCES_DIR, "models")
 if not os.path.isdir(MODELS_DIR):
