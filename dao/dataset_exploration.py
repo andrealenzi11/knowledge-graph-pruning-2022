@@ -3,7 +3,7 @@ from pykeen.datasets import FB15k237, WN18RR, YAGO310, UMLS, Countries
 if __name__ == '__main__':
 
     # "FB15k237" | "WN18RR" | "YAGO310" | "UMLS" | "Countries"
-    dataset_name = "Countries"
+    dataset_name = "YAGO310"
     print(f"\n {'#'* 10} {dataset_name} {'#'* 10} \n")
 
     if dataset_name == "FB15k237":
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     print(dataset.factory_dict)
 
     print(f"\n{'-'*80}\n >>>> Summarization...")
-    print(dataset.summarize(title=None, show_examples=5, file=None))
+    print(dataset.summarize(title=None, show_examples=50, file=None))
     # print(dataset.summary_str(title=None, show_examples=5, end='\\n'))
     print(f"{'-'*80}\n")
 
