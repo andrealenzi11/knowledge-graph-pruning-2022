@@ -1,12 +1,12 @@
 import pandas as pd
 
-from config import SUBJ, RELATION, OBJ
+from config import HEAD, RELATION, TAIL
 
 
 def read_kg_tsv(in_path: str,
-                head_column_name: str = SUBJ,
+                head_column_name: str = HEAD,
                 relation_column_name: str = RELATION,
-                tail_column_name: str = OBJ) -> pd.DataFrame:
+                tail_column_name: str = TAIL) -> pd.DataFrame:
     """
         Read he tsv file that represents the Knowledge Graph and return the respective DataFrame object
     """

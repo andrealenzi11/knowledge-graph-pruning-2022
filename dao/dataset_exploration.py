@@ -17,16 +17,22 @@ if __name__ == '__main__':
     elif dataset_name == "Countries":
         dataset = Countries(create_inverse_triples=False)
     else:
-        raise ValueError("Invalid dataset name!")
+        raise ValueError("Invalid pykeen_dataset name!")
+
+    print(type(dataset))
+    print(dataset.training.triples.shape)
 
     print("- Whole DataSet:")
     print(dataset)
     print("- Training:")
     print(dataset.training)
+    print(type(dataset.training))
     print("- Validation:")
     print(dataset.validation)
+    print(type(dataset.validation))
     print("- Testing:")
     print(dataset.testing)
+    print(type(dataset.testing))
 
     print("\n Mapping:")
     print(list(dataset.entity_to_id.keys())[:10])
@@ -35,7 +41,7 @@ if __name__ == '__main__':
 
     print(f"\n{'-'*80}\n >>>> Summarization...")
     print(dataset.summarize(title=None, show_examples=50, file=None))
-    # print(dataset.summary_str(title=None, show_examples=5, end='\\n'))
+    # print(pykeen_dataset.summary_str(title=None, show_examples=5, end='\\n'))
     print(f"{'-'*80}\n")
 
     # allintitle: Similar to “intitle,” but only results containing

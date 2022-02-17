@@ -1,13 +1,13 @@
 import pandas as pd
 
-from config import SUBJ, RELATION, OBJ
+from config import HEAD, RELATION, TAIL
 
 
 def extract_sample_from_knowledge_graph(in_file_path: str,
                                         out_file_path: str,
-                                        head_column_name: str = SUBJ,
+                                        head_column_name: str = HEAD,
                                         relation_column_name: str = RELATION,
-                                        tail_column_name: str = OBJ,
+                                        tail_column_name: str = TAIL,
                                         fraction: float = 0.05):
     # reading
     df = pd.read_csv(in_file_path,

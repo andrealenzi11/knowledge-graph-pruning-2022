@@ -1,2 +1,3 @@
 networkx==2.6.3
+nltk==3.7
 pykeen==1.7.0
