@@ -1,6 +1,7 @@
 import os
 from typing import Optional, Tuple
 
+import numpy as np
 import pandas as pd
 import torch
 from pykeen.pipeline import pipeline, PipelineResult
@@ -161,3 +162,6 @@ def all_prediction(model: "pykeen trained model",
     return top_k_predictions_df
 
 
+def triples_prediction(model: "pykeen trained model",
+                       triples: "indices of (h, r, t) triples.") -> np.ndarray:
+    return model.predict_scores(triples=triples)
