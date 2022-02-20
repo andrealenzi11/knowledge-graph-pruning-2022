@@ -4,7 +4,7 @@ import os
 import nltk
 from nltk.corpus import wordnet
 
-from config import DATASETS_DIR
+from config import DATASETS_DIR, FB15K237_MAPPING_FILE
 from dao.data_model import DatasetName
 from dao.dataset_convertion import DatasetConverter
 from dao.dataset_loading import PykeenDatasetLoader
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     wordnet_offset_2_wordnet_name_map = {str(s.offset()).lstrip("0"): str(s.name()) for s in wordnet.all_synsets()}
     print(f"#wordnet_offset_2_wordnet_name_map: {len(wordnet_offset_2_wordnet_name_map)}")
 
-    with open(os.path.join(DATASETS_DIR, "FB15K237", "entity2wikidata.json"), "r") as mapping_file:
+    with open(FB15K237_MAPPING_FILE, "r") as mapping_file:
         entity_wikidata_mapping = json.load(mapping_file)
     freebase_id_2_wikidata_label_map = {k: v["label"] for k, v in entity_wikidata_mapping.items()}
     print(f"#freebase_id_2_wikidata_label_map: {len(freebase_id_2_wikidata_label_map)}")
