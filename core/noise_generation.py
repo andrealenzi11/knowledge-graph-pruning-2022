@@ -3,6 +3,7 @@ from typing import Tuple, List
 import pandas as pd
 from sdv.tabular import GaussianCopula
 
+from config import HEAD, RELATION, TAIL
 from dao.data_model import NoisyDataset
 
 
@@ -18,7 +19,15 @@ class NoiseGenerator:
         self.model = GaussianCopula()
 
     def train(self):
-        self.model.fit(self.training_df)
+        print("\n\t\t - Start Fit...")
+        df_x = self.training_df.sample(100)
+        df_x[HEAD] = df_x[HEAD].astype("str")
+        df_x[RELATION] = df_x[RELATION].astype("str")
+        df_x[TAIL] = df_x[TAIL].astype("str")
+        df_x = df_x.reset_index(drop=True)
+        print(df_x)
+        print(df_x.info())
+        self.model.fit(df_x)
 
     def _generate_noise(self,
                         noise_percentage: int,

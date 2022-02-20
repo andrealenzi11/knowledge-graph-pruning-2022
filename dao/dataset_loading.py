@@ -1,10 +1,11 @@
 import os
+from typing import Tuple
 
 import pandas as pd
 from pykeen import datasets
 
 from config import DATASETS_DIR
-from dao.data_model import DatasetName, DatasetPartition, NoiseLevel
+from dao.data_model import DatasetName
 
 
 class PykeenDatasetLoader:
@@ -43,19 +44,31 @@ class TsvDatasetLoader:
     """
 
     def __init__(self,
-                 dataset_name: DatasetName,
-                 dataset_partition: DatasetPartition,
-                 noise_level: NoiseLevel = NoiseLevel.ZERO):
-        self.dataset_name = dataset_name.value
-        self.dataset_partition = f"{dataset_partition.value}.tsv"
-        self.noise_level = noise_level.value
-        self.in_path = os.path.join(DATASETS_DIR,
-                                    self.dataset_name,
-                                    self.noise_level,
-                                    self.dataset_partition)
-        print(self.in_path)
+                 dataset_name: str,
+                 noise_level: str):
+        self.dataset_name = dataset_name
+        self.noise_level = noise_level
+        self.in_path_training = os.path.join(DATASETS_DIR,
+                                             self.dataset_name,
+                                             self.noise_level,
+                                             "training.tsv")
+        self.in_path_validation = os.path.join(DATASETS_DIR,
+                                               self.dataset_name,
+                                               self.noise_level,
+                                               "validation.tsv")
+        self.in_path_testing = os.path.join(DATASETS_DIR,
+                                            self.dataset_name,
+                                            self.noise_level,
+                                            "testing.tsv")
 
-    def get_tsv_dataset(self) -> pd.DataFrame:
-        return pd.read_csv(filepath_or_buffer=self.in_path,
-                           sep="\t",
-                           encoding="utf-8")
+    def get_training_validation_testing_dfs(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        training_df = pd.read_csv(filepath_or_buffer=self.in_path_training,
+                                  sep="\t",
+                                  encoding="utf-8")
+        validation_df = pd.read_csv(filepath_or_buffer=self.in_path_validation,
+                                    sep="\t",
+                                    encoding="utf-8")
+        testing_df = pd.read_csv(filepath_or_buffer=self.in_path_testing,
+                                 sep="\t",
+                                 encoding="utf-8")
+        return training_df, validation_df, testing_df
