@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
 
 import pandas as pd
 
@@ -28,8 +27,8 @@ class NoiseLevel(Enum):
 @dataclass
 class NoisyDataset:
     training_df: pd.DataFrame
-    training_fake_y: List[int]
+    training_y_fake: pd.Series
     validation_df: pd.DataFrame
-    validation_fake_y: List[int]
+    validation_y_fake: pd.Series
     testing_df: pd.DataFrame
-    testing_fake_y: List[int]
+    testing_y_fake: pd.Series
