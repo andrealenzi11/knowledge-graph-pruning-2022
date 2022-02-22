@@ -32,9 +32,9 @@ if __name__ == '__main__':
                                          training_df=df_training,
                                          validation_df=df_validation,
                                          testing_df=df_testing,
-                                         training_sample=500,
-                                         batch_size=500,
-                                         epochs=30)
+                                         training_sample=5000,
+                                         batch_size=1000,
+                                         epochs=150)
         try:
             noise_generator.load_model(model_name=model_name)
             print("model load from FS!")

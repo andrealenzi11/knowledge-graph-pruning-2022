@@ -43,7 +43,7 @@ class NoiseGenerator:
 
     def train(self):
         print("\n\t\t - Start Fitting on Data ...")
-        if self.training_sample:
+        if self.training_sample and (self.training_sample < self.training_df.shape[0]):
             training_df = self.training_df.copy().sample(self.training_sample).astype("str").reset_index(drop=True)
         else:
             training_df = self.training_df.copy().astype("str").reset_index(drop=True)
