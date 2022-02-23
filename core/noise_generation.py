@@ -5,7 +5,7 @@ from typing import Tuple, Optional
 import pandas as pd
 from sdv.tabular import CTGAN
 
-from config import HEAD, RELATION, TAIL
+from config import HEAD, RELATION, TAIL, FAKE_FLAG, TRAINING, VALIDATION, TESTING
 from dao.data_model import NoisyDataset
 
 
@@ -89,20 +89,20 @@ class NoiseGenerator:
         partition_fake_y = [0] * partition_original_size + [1] * partition_sample_size
         partition_fake_series = pd.Series(data=partition_fake_y,
                                           dtype=int,
-                                          name=f"Y_FAKE")
+                                          name=FAKE_FLAG)
         return partition_final_df, partition_fake_series
 
     def generate_noisy_dataset(self, noise_percentage: int) -> NoisyDataset:
         if not self.is_fitted:
             raise Exception("Error: the CTGAN model is not already fitted on training data!")
         training_final_df, training_y_fake = self._generate_noise(noise_percentage=noise_percentage,
-                                                                  partition_name="training",
+                                                                  partition_name=TRAINING,
                                                                   partition_df=self.training_df)
         validation_final_df, validation_y_fake = self._generate_noise(noise_percentage=noise_percentage,
-                                                                      partition_name="validation",
+                                                                      partition_name=VALIDATION,
                                                                       partition_df=self.validation_df)
         testing_final_df, testing_y_fake = self._generate_noise(noise_percentage=noise_percentage,
-                                                                partition_name="testing",
+                                                                partition_name=TESTING,
                                                                 partition_df=self.testing_df)
         return NoisyDataset(training_df=training_final_df,
                             training_y_fake=training_y_fake,

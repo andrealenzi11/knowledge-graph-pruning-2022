@@ -3,10 +3,14 @@ import os
 from config import FB15K237, FB15K237_FOLDER_PATH, \
     WN18RR, WN18RR_FOLDER_PATH, \
     YAGO310, YAGO310_FOLDER_PATH, \
-    COUNTRIES_FOLDER_PATH, COUNTRIES
+    COUNTRIES_FOLDER_PATH, COUNTRIES, \
+    ORIGINAL, NOISE_1, NOISE_5, NOISE_10, \
+    TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
+    VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
+    TESTING_TSV, TESTING_Y_FAKE_TSV
 from core.noise_generation import NoiseGenerator
-from dao.data_model import NoiseLevel
 from dao.dataset_loading import TsvDatasetLoader
+
 
 if __name__ == '__main__':
 
@@ -20,7 +24,7 @@ if __name__ == '__main__':
         print(f"\n\n>>>>>>>>>>>>>>>>>>>> {dataset_name} <<<<<<<<<<<<<<<<<<<<")
 
         tsv_dataset_loader = TsvDatasetLoader(dataset_name=dataset_name,
-                                              noise_level=NoiseLevel.ZERO.value)
+                                              noise_level=ORIGINAL)
 
         df_training, df_validation, df_testing = tsv_dataset_loader.get_training_validation_testing_dfs()
         print(f"training_shape={df_training.shape} \n"
@@ -44,9 +48,9 @@ if __name__ == '__main__':
             noise_generator.store_model(model_name=model_name)
 
         for noise_percentage_num, noise_percentage_folder in [
-            (1, "noise_1"),
-            (5, "noise_5"),
-            (10, "noise_10"),
+            (1, NOISE_1),
+            (5, NOISE_5),
+            (10, NOISE_10),
         ]:
             print(f"\n{'-' * 80}")
             print(f"{noise_percentage_num}  |  {noise_percentage_folder}")
@@ -57,11 +61,11 @@ if __name__ == '__main__':
             print(noisy_dataset.training_df.shape)
             print(len(noisy_dataset.training_y_fake))
             noisy_dataset.training_df.to_csv(
-                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, "training.tsv"),
+                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, TRAINING_TSV),
                 sep="\t", header=True, index=False, encoding="utf-8"
             )
             noisy_dataset.training_y_fake.to_csv(
-                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, "training_y_fake.tsv"),
+                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, TRAINING_Y_FAKE_TSV),
                 sep="\t", header=True, index=False, encoding="utf-8"
             )
 
@@ -69,11 +73,11 @@ if __name__ == '__main__':
             print(noisy_dataset.validation_df.shape)
             print(len(noisy_dataset.validation_y_fake))
             noisy_dataset.validation_df.to_csv(
-                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, "validation.tsv"),
+                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, VALIDATION_TSV),
                 sep="\t", header=True, index=False, encoding="utf-8"
             )
             noisy_dataset.validation_y_fake.to_csv(
-                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, "validation_y_fake.tsv"),
+                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, VALIDATION_Y_FAKE_TSV),
                 sep="\t", header=True, index=False, encoding="utf-8"
             )
 
@@ -81,11 +85,11 @@ if __name__ == '__main__':
             print(noisy_dataset.testing_df.shape)
             print(len(noisy_dataset.testing_y_fake))
             noisy_dataset.testing_df.to_csv(
-                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, "testing.tsv"),
+                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, TESTING_TSV),
                 sep="\t", header=True, index=False, encoding="utf-8"
             )
             noisy_dataset.testing_y_fake.to_csv(
-                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, "testing_y_fake.tsv"),
+                path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, TESTING_Y_FAKE_TSV),
                 sep="\t", header=True, index=False, encoding="utf-8"
             )
 

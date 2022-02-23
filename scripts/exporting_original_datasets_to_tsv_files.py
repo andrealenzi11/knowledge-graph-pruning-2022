@@ -4,8 +4,7 @@ import os
 import nltk
 from nltk.corpus import wordnet
 
-from config import DATASETS_DIR, FB15K237_MAPPING_FILE
-from dao.data_model import DatasetName
+from config import DATASETS_DIR, FB15K237_MAPPING_FILE, ORIGINAL, COUNTRIES, YAGO310, FB15K237, WN18RR
 from dao.dataset_convertion import DatasetConverter
 from dao.dataset_loading import PykeenDatasetLoader
 from dao.dataset_storing import DatasetExporter
@@ -26,10 +25,10 @@ if __name__ == '__main__':
     print(f"#freebase_id_2_wikidata_label_map: {len(freebase_id_2_wikidata_label_map)}")
 
     for current_dataset_name, current_id_label_map in [
-        (DatasetName.COUNTRIES, None),
-        (DatasetName.YAGO310, None),
-        (DatasetName.FB15K237, freebase_id_2_wikidata_label_map),
-        (DatasetName.WN18RR, wordnet_offset_2_wordnet_name_map),
+        (COUNTRIES, None),
+        (YAGO310, None),
+        (FB15K237, freebase_id_2_wikidata_label_map),
+        (WN18RR, wordnet_offset_2_wordnet_name_map),
     ]:
         print(f"\n\n\n##### {current_dataset_name} #####")
         # ===== Get Pykeen Dataset ===== #
@@ -57,7 +56,7 @@ if __name__ == '__main__':
 
         # ===== Export to FS ===== #
         print("\n - out_folder_path:")
-        my_out_folder_path = os.path.join(DATASETS_DIR, current_dataset_name.value, "original")
+        my_out_folder_path = os.path.join(DATASETS_DIR, current_dataset_name.value, ORIGINAL)
         print(my_out_folder_path)
 
         DatasetExporter(output_folder=my_out_folder_path,

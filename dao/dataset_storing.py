@@ -2,6 +2,8 @@ import os
 
 import pandas as pd
 
+from config import TRAINING_TSV, VALIDATION_TSV, TESTING_TSV
+
 
 class DatasetExporter:
     """
@@ -19,15 +21,15 @@ class DatasetExporter:
         self.testing_df = testing_df
 
     def _store_training(self):
-        self.training_df.to_csv(path_or_buf=os.path.join(self.output_folder, "training.tsv"),
+        self.training_df.to_csv(path_or_buf=os.path.join(self.output_folder, TRAINING_TSV),
                                 sep="\t", header=True, index=False, encoding="utf-8")
 
     def _store_validation(self):
-        self.validation_df.to_csv(path_or_buf=os.path.join(self.output_folder, "validation.tsv"),
+        self.validation_df.to_csv(path_or_buf=os.path.join(self.output_folder, VALIDATION_TSV),
                                   sep="\t", header=True, index=False, encoding="utf-8")
 
     def _store_testing(self):
-        self.testing_df.to_csv(path_or_buf=os.path.join(self.output_folder, "testing.tsv"),
+        self.testing_df.to_csv(path_or_buf=os.path.join(self.output_folder, TESTING_TSV),
                                sep="\t", header=True, index=False, encoding="utf-8")
 
     def store_to_file_system(self):
