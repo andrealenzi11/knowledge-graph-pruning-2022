@@ -50,22 +50,22 @@ def get_train_test_validation_2(knowledge_graph_path: str,
 def train(training: TriplesFactory,
           testing: TriplesFactory,
           validation: TriplesFactory,
-          checkpoint_folder_path: str) -> PipelineResult:
+          kge_model_obj: "Pykeen KGE model name") -> PipelineResult:
     return pipeline(
         training=training,
         validation=validation,
         testing=testing,
-        model='TransE',
-        model_kwargs=dict(
-            embedding_dim=50
-        ),
-        training_kwargs=dict(
-            num_epochs=3,
-            checkpoint_directory=checkpoint_folder_path,
-            checkpoint_name='my_checkpoint.pt',
-            checkpoint_frequency=10,
-            checkpoint_on_failure=True,
-        ),
+        model=kge_model_obj,
+        # model_kwargs=dict(
+        #     embedding_dim=50
+        # ),
+        # training_kwargs=dict(
+        #     num_epochs=3,
+        #     checkpoint_directory=checkpoint_folder_path,
+        #     checkpoint_name='my_checkpoint.pt',
+        #     checkpoint_frequency=10,
+        #     checkpoint_on_failure=True,
+        # ),
         optimizer='Adam',
         training_loop='sLCWA',
         negative_sampler='basic',

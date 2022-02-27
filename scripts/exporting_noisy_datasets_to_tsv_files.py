@@ -1,9 +1,9 @@
 import os
 
-from config import FB15K237, FB15K237_FOLDER_PATH, \
-    WN18RR, WN18RR_FOLDER_PATH, \
-    YAGO310, YAGO310_FOLDER_PATH, \
-    COUNTRIES_FOLDER_PATH, COUNTRIES, \
+from config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
+    WN18RR, WN18RR_DATASETS_FOLDER_PATH, \
+    YAGO310, YAGO310_DATASETS_FOLDER_PATH, \
+    COUNTRIES_DATASETS_FOLDER_PATH, COUNTRIES, \
     ORIGINAL, NOISE_1, NOISE_5, NOISE_10, \
     TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
     VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
@@ -15,10 +15,10 @@ from dao.dataset_loading import TsvDatasetLoader
 if __name__ == '__main__':
 
     for dataset_name, dataset_folder in [
-        (FB15K237, FB15K237_FOLDER_PATH),
-        (WN18RR, WN18RR_FOLDER_PATH),
-        (YAGO310, YAGO310_FOLDER_PATH),
-        (COUNTRIES, COUNTRIES_FOLDER_PATH),
+        (FB15K237, FB15K237_DATASETS_FOLDER_PATH),
+        (WN18RR, WN18RR_DATASETS_FOLDER_PATH),
+        (YAGO310, YAGO310_DATASETS_FOLDER_PATH),
+        (COUNTRIES, COUNTRIES_DATASETS_FOLDER_PATH),
     ]:
 
         print(f"\n\n>>>>>>>>>>>>>>>>>>>> {dataset_name} <<<<<<<<<<<<<<<<<<<<")

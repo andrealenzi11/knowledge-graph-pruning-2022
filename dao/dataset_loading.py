@@ -83,3 +83,6 @@ class TsvDatasetLoader:
         testing_y_fake = pd.read_csv(filepath_or_buffer=self.in_path_y_fake_testing,
                                      sep="\t", encoding="utf-8")[FAKE_FLAG]
         return training_y_fake, validation_y_fake, testing_y_fake
+
+    def get_training_validation_testing_y_fakes_paths(self) -> Tuple[str, str, str]:
+        return self.in_path_y_fake_training, self.in_path_y_fake_validation, self.in_path_y_fake_testing
