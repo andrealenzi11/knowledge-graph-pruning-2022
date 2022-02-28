@@ -73,6 +73,7 @@ def train(training: TriplesFactory,
         stopper='early',
         random_seed=1,
         device='gpu',  # 'cpu'
+        use_tqdm=True,
     )
 
 
