@@ -1,7 +1,7 @@
 import os
 
 from pykeen.models import AutoSF, BoxE, ComplEx, ConvE, DistMult, PairRE, \
-    RESCAL, RGCN, RotatE, TransD, TransE, TransH, TransR
+    RESCAL, RGCN, RotatE, TransD, TransE, TransH, TransR, HolE, ConvKB
 
 from config import COUNTRIES, FB15K237, WN18RR, YAGO310, \
     COUNTRIES_MODELS_FOLDER_PATH, FB15K237_MODELS_FOLDER_PATH, WN18RR_MODELS_FOLDER_PATH, YAGO310_MODELS_FOLDER_PATH, \
@@ -62,7 +62,9 @@ if __name__ == '__main__':
             ("TransR", TransR, 2015),
             ("TransD", TransD, 2015),
             ("ComplEx", ComplEx, 2016),
+            ("HolE", HolE, 2016),
             ("ConvE", ConvE, 2018),
+            ("ConvKB", ConvKB, 2018),
             # ("RGCN", RGCN, 2018),   # RuntimeError: CUDA out of memory
             ("RotatE", RotatE, 2019),
             ("PairRE", PairRE, 2020),
