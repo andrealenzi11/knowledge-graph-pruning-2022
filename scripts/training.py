@@ -14,7 +14,7 @@ from dao.dataset_loading import TsvDatasetLoader
 if __name__ == '__main__':
 
     # Specify a Valid option: COUNTRIES, FB15K237, WN18RR, YAGO310
-    DATASET_NAME: str = ""
+    DATASET_NAME: str = YAGO310
     FORCE_TRAINING: bool = False
 
     if DATASET_NAME == COUNTRIES:
@@ -62,8 +62,10 @@ if __name__ == '__main__':
             ("TransR", TransR, 2015),
             ("TransD", TransD, 2015),
             ("ComplEx", ComplEx, 2016),
-            ("ConvE", ConvE, 2018),
-            # ("RGCN", RGCN, 2018),   # RuntimeError: CUDA out of memory
+            # ("ConvE", ConvE, 2018),  # MemoryError: The current model can't be evaluated on this hardware
+                                       # with these parameters, as evaluation batch_size=1 is too big and slicing
+                                       # is not implemented for this model yet.
+            # ("RGCN", RGCN, 2018),    # RuntimeError: CUDA out of memory
             ("RotatE", RotatE, 2019),
             ("PairRE", PairRE, 2020),
             ("AutoSF", AutoSF, 2020),
