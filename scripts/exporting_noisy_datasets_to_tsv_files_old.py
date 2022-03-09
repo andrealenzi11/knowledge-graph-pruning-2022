@@ -8,8 +8,9 @@ from config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
     TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
     VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
     TESTING_TSV, TESTING_Y_FAKE_TSV
-from core.noise_generation import DeterministicNoiseGenerator
+from core.noise_generation import NeuralNoiseGenerator
 from dao.dataset_loading import TsvDatasetLoader
+
 
 if __name__ == '__main__':
 
@@ -30,11 +31,21 @@ if __name__ == '__main__':
               f"validation_shape={df_validation.shape} \n"
               f"testing_shape={df_testing.shape} \n")
 
-        noise_generator = DeterministicNoiseGenerator(training_df=df_training,
-                                                      validation_df=df_validation,
-                                                      testing_df=df_testing,
-                                                      sampling_with_replacement_flag=True,
-                                                      random_state=None)
+        model_name = "cbgan_model_v1"
+        noise_generator = NeuralNoiseGenerator(models_folder_path=dataset_folder,
+                                               training_df=df_training,
+                                               validation_df=df_validation,
+                                               testing_df=df_testing,
+                                               training_sample=5000,
+                                               batch_size=1000,
+                                               epochs=150)
+        try:
+            noise_generator.load_model(model_name=model_name)
+            print("model load from FS!")
+        except FileNotFoundError as fnf_err:
+            print(fnf_err)
+            noise_generator.train()
+            noise_generator.store_model(model_name=model_name)
 
         for noise_percentage_num, noise_percentage_folder in [
             (1, NOISE_1),

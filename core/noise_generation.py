@@ -1,5 +1,6 @@
 import math
 import os
+from abc import ABC, abstractmethod
 from typing import Tuple, Optional
 
 import pandas as pd
@@ -9,21 +10,35 @@ from config import HEAD, RELATION, TAIL, FAKE_FLAG, TRAINING, VALIDATION, TESTIN
 from dao.data_model import NoisyDataset
 
 
-class NoiseGenerator:
+class NoiseGenerator(ABC):
 
     def __init__(self,
-                 models_folder_path: str,
                  training_df: pd.DataFrame,
                  validation_df: pd.DataFrame,
-                 testing_df: pd.DataFrame,
-                 training_sample: Optional[int] = None,
-                 batch_size: int = 500,
-                 epochs: int = 300):
-
-        self.models_folder_path = models_folder_path
+                 testing_df: pd.DataFrame):
         self.training_df = training_df[[HEAD, RELATION, TAIL]].astype("str").reset_index(drop=True)  # "category"
         self.validation_df = validation_df[[HEAD, RELATION, TAIL]].astype("str").reset_index(drop=True)  # "category"
         self.testing_df = testing_df[[HEAD, RELATION, TAIL]].astype("str").reset_index(drop=True)  # "category"
+
+    @abstractmethod
+    def generate_noisy_dataset(self, noise_percentage: int) -> NoisyDataset:
+        pass
+
+
+class NeuralNoiseGenerator(NoiseGenerator):
+
+    def __init__(self,
+                 training_df: pd.DataFrame,
+                 validation_df: pd.DataFrame,
+                 testing_df: pd.DataFrame,
+                 models_folder_path: str,
+                 training_sample: Optional[int] = None,
+                 batch_size: int = 500,
+                 epochs: int = 300):
+        super().__init__(training_df=training_df,
+                         validation_df=validation_df,
+                         testing_df=testing_df)
+        self.models_folder_path = models_folder_path
         self.training_sample = training_sample
         self.batch_size = batch_size
         self.epochs = epochs
@@ -95,6 +110,72 @@ class NoiseGenerator:
     def generate_noisy_dataset(self, noise_percentage: int) -> NoisyDataset:
         if not self.is_fitted:
             raise Exception("Error: the CTGAN model is not already fitted on training data!")
+        training_final_df, training_y_fake = self._generate_noise(noise_percentage=noise_percentage,
+                                                                  partition_name=TRAINING,
+                                                                  partition_df=self.training_df)
+        validation_final_df, validation_y_fake = self._generate_noise(noise_percentage=noise_percentage,
+                                                                      partition_name=VALIDATION,
+                                                                      partition_df=self.validation_df)
+        testing_final_df, testing_y_fake = self._generate_noise(noise_percentage=noise_percentage,
+                                                                partition_name=TESTING,
+                                                                partition_df=self.testing_df)
+        return NoisyDataset(training_df=training_final_df,
+                            training_y_fake=training_y_fake,
+                            validation_df=validation_final_df,
+                            validation_y_fake=validation_y_fake,
+                            testing_df=testing_final_df,
+                            testing_y_fake=testing_y_fake)
+
+
+class DeterministicNoiseGenerator(NoiseGenerator):
+
+    def __init__(self,
+                 training_df: pd.DataFrame,
+                 validation_df: pd.DataFrame,
+                 testing_df: pd.DataFrame,
+                 sampling_with_replacement_flag: bool = True,
+                 random_state: Optional[int] = None):
+        super().__init__(training_df=training_df,
+                         validation_df=validation_df,
+                         testing_df=testing_df)
+        self.sampling_with_replacement_flag = sampling_with_replacement_flag
+        self.random_state = random_state
+
+    def _generate_noise(self,
+                        noise_percentage: int,
+                        partition_name: str,
+                        partition_df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
+        partition_original_size = partition_df.shape[0]
+        partition_sample_size = int(math.ceil(partition_original_size / 100 * noise_percentage))
+        print(f"[noise_{noise_percentage}%]  |  "
+              f"{partition_name}_sample_size: {partition_sample_size}  | "
+              f"{partition_name}_original_size: {partition_original_size}")
+        print(f"\t\t original_df: {partition_df.shape}")
+        head_sample = partition_df[HEAD].sample(n=partition_sample_size,
+                                                replace=self.sampling_with_replacement_flag,
+                                                random_state=self.random_state).values
+        relation_sample = partition_df[RELATION].sample(n=partition_sample_size,
+                                                        replace=self.sampling_with_replacement_flag,
+                                                        random_state=self.random_state).values
+        tail_sample = partition_df[TAIL].sample(n=partition_sample_size,
+                                                replace=self.sampling_with_replacement_flag,
+                                                random_state=self.random_state).values
+        partition_anomalies_df = pd.DataFrame(data={HEAD: head_sample,
+                                                    RELATION: relation_sample,
+                                                    TAIL: tail_sample}).reset_index(drop=True)
+        print(f"\t\t anomalies_df: {partition_anomalies_df.shape}")
+        partition_final_df = pd.concat([partition_df, partition_anomalies_df],
+                                       axis=0,
+                                       ignore_index=True,
+                                       verify_integrity=True).reset_index(drop=True)
+        print(f"\t\t final_df: {partition_final_df.shape}")
+        partition_fake_y = [0] * partition_original_size + [1] * partition_sample_size
+        partition_fake_series = pd.Series(data=partition_fake_y,
+                                          dtype=int,
+                                          name=FAKE_FLAG)
+        return partition_final_df, partition_fake_series
+
+    def generate_noisy_dataset(self, noise_percentage: int) -> NoisyDataset:
         training_final_df, training_y_fake = self._generate_noise(noise_percentage=noise_percentage,
                                                                   partition_name=TRAINING,
                                                                   partition_df=self.training_df)
