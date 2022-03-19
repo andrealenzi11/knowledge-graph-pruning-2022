@@ -7,6 +7,12 @@ def create_non_existent_folder(folder_path: str):
         os.makedirs(folder_path)
 
 
+# ==================== Random Seeds ==================== #
+RANDOM_SEED_HEAD_SAMPLING = 11
+RANDOM_SEED_RELATION_SAMPLING = 500
+RANDOM_SEED_TAIL_SAMPLING = 1200
+# ====================================================== #
+
 # ==================== Fields Names ==================== #
 HEAD = "HEAD"
 RELATION = "RELATION"

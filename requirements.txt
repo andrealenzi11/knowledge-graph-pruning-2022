@@ -1,4 +1,4 @@
-networkx==2.6.3
+networkx==2.7.1
 nltk==3.7
 pykeen==1.7.0
 sdv==0.13.1
