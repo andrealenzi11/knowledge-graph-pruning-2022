@@ -1,7 +1,6 @@
 import os
 
-from pykeen.models import AutoSF, BoxE, ComplEx, ConvE, DistMult, PairRE, \
-    RESCAL, RGCN, RotatE, TransD, TransE, TransH, TransR, HolE, ConvKB
+from pykeen.models import *
 
 from config import COUNTRIES, FB15K237, WN18RR, YAGO310, \
     COUNTRIES_MODELS_FOLDER_PATH, FB15K237_MODELS_FOLDER_PATH, WN18RR_MODELS_FOLDER_PATH, YAGO310_MODELS_FOLDER_PATH, \
@@ -14,7 +13,7 @@ from dao.dataset_loading import TsvDatasetLoader
 if __name__ == '__main__':
 
     # Specify a Valid option: COUNTRIES, FB15K237, WN18RR, YAGO310
-    DATASET_NAME: str = YAGO310
+    DATASET_NAME: str = COUNTRIES
     FORCE_TRAINING: bool = False
 
     if DATASET_NAME == COUNTRIES:
@@ -30,10 +29,10 @@ if __name__ == '__main__':
                          f"\t\t Specify one of the following values: \n"
                          f"\t\t [{COUNTRIES}, {FB15K237}, {WN18RR}, {YAGO310}] \n")
 
-    print(f"\n{'*'*80}")
+    print(f"\n{'*' * 80}")
     print(DATASET_NAME)
     print(DATASET_MODELS_FOLDER_PATH)
-    print(f"{'*'*80}\n\n")
+    print(f"{'*' * 80}\n\n")
 
     for noise_level in [
         NOISE_1,
@@ -42,17 +41,30 @@ if __name__ == '__main__':
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
         datasets_loader = TsvDatasetLoader(dataset_name=DATASET_NAME, noise_level=noise_level)
-        training_path, validation_path, testing_path = datasets_loader.get_training_validation_testing_dfs_paths()
-        print(training_path)
-        print(validation_path)
-        print(testing_path)
+        training_path, validation_path, testing_path = \
+            datasets_loader.get_training_validation_testing_dfs_paths(noisy_test_flag=False)
 
         training, testing, validation = get_train_test_validation(training_set_path=training_path,
                                                                   test_set_path=testing_path,
                                                                   validation_set_path=validation_path,
                                                                   create_inverse_triples=False)
+        print("\t (*) training:")
+        print(f"\t\t\t path={training_path}")
+        print(f"\t\t\t #triples={training.num_triples}  | "
+              f" #entities={training.num_entities}  | "
+              f" #relations={training.num_relations} \n")
+        print("\t (*) validation:")
+        print(f"\t\t\t path={validation_path}")
+        print(f"\t\t\t #triples={validation.num_triples}  | "
+              f" #entities={validation.num_entities}  | "
+              f" #relations={validation.num_relations} \n")
+        print("\t (*) testing:")
+        print(f"\t\t\t path={testing_path}")
+        print(f"\t\t\t #triples={testing.num_triples}  | "
+              f" #entities={testing.num_entities}  | "
+              f" #relations={testing.num_relations} \n")
 
-        # "TuckEr", "NodePiece", "CompGCN" do not work!
+        print("\n\n>>> Start KGE models training...\n")
 
         for model_name, model_class_name, year in [
             ("RESCAL", RESCAL, 2011),
@@ -62,16 +74,23 @@ if __name__ == '__main__':
             ("TransR", TransR, 2015),
             ("TransD", TransD, 2015),
             ("ComplEx", ComplEx, 2016),
-            # ("ConvE", ConvE, 2018),  # MemoryError
-            # ("RGCN", RGCN, 2018),    # RuntimeError: CUDA out of memory
             ("HolE", HolE, 2016),
             ("ConvE", ConvE, 2018),
             ("ConvKB", ConvKB, 2018),
-            # ("RGCN", RGCN, 2018),   # RuntimeError: CUDA out of memory
+            ("RGCN", RGCN, 2018),  # RuntimeError: CUDA out of memory (sometimes)
             ("RotatE", RotatE, 2019),
             ("PairRE", PairRE, 2020),
             ("AutoSF", AutoSF, 2020),
             ("BoxE", BoxE, 2020),
+            # === MemoryError: The current model can't be trained on this hardware with these parameters ===  #
+            # ("TuckER", TuckER, 2019),
+            # =============================================================================================== #
+            # === AssertionError: assert triples_factory.create_inverse_triples === #
+            # ("CompGCN", CompGCN, 2020),
+            # ===================================================================== #
+            # === ValueError: The provided triples factory does not create inverse triples === #
+            # ("NodePiece", NodePiece, 2021),
+            # ================================================================================ #
         ]:
             print(f"\n>>>>>>>>>>>>>>>>>>>> {model_name} ({year}) <<<<<<<<<<<<<<<<<<<<")
 

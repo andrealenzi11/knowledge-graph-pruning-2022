@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 from pykeen.pipeline import pipeline, PipelineResult
 from pykeen.triples import TriplesFactory
-
+from pykeen.evaluation.rank_based_evaluator import RankBasedEvaluator, RankBasedMetricResults
 
 def get_train_test_validation(training_set_path: str,
                               test_set_path: str,
@@ -69,7 +69,7 @@ def train(training: TriplesFactory,
         optimizer='Adam',
         training_loop='sLCWA',
         negative_sampler='basic',
-        evaluator='RankBasedEvaluator',
+        evaluator=RankBasedEvaluator(),  # RankBasedMetricResults()
         stopper='early',
         random_seed=1,
         device='gpu',  # 'cpu'
