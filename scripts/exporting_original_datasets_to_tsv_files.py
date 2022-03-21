@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
         # ===== Export to FS ===== #
         print("\n - out_folder_path:")
-        my_out_folder_path = os.path.join(DATASETS_DIR, current_dataset_name.value, ORIGINAL)
+        my_out_folder_path = os.path.join(DATASETS_DIR, current_dataset_name, ORIGINAL)
         print(my_out_folder_path)
 
         DatasetExporter(output_folder=my_out_folder_path,

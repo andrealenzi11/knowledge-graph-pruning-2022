@@ -52,6 +52,9 @@ create_non_existent_folder(folder_path=MODELS_DIR)
 
 CHECKPOINTS_DIR = os.path.join(RESOURCES_DIR, "checkpoints")
 create_non_existent_folder(folder_path=CHECKPOINTS_DIR)
+
+RESULTS_DIR = os.path.join(RESOURCES_DIR, "results")
+create_non_existent_folder(folder_path=RESULTS_DIR)
 # ======================================================================= #
 
 # ==================== Datasets ==================== #

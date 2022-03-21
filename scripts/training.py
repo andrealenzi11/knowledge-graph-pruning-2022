@@ -12,7 +12,7 @@ from dao.dataset_loading import TsvDatasetLoader
 
 if __name__ == '__main__':
 
-    # Specify a Valid option: COUNTRIES, FB15K237, WN18RR, YAGO310
+    # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310
     DATASET_NAME: str = COUNTRIES
     FORCE_TRAINING: bool = False
 
@@ -76,7 +76,7 @@ if __name__ == '__main__':
             ("ComplEx", ComplEx, 2016),
             ("HolE", HolE, 2016),
             ("ConvE", ConvE, 2018),
-            ("ConvKB", ConvKB, 2018),
+            # ("ConvKB", ConvKB, 2018), # MemoryError: The current model can't be trained on this hardware with these parameters.
             ("RGCN", RGCN, 2018),  # RuntimeError: CUDA out of memory (sometimes)
             ("RotatE", RotatE, 2019),
             ("PairRE", PairRE, 2020),
