@@ -11,6 +11,8 @@ if __name__ == '__main__':
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310
     DATASET_NAME: str = WN18RR
+    STRATEGY1: str = "both"  # "both" | "head" | "tail"
+    STRATEGY2: str = "realistic"  # "realistic" | "optimistic" | "pessimistic"
 
     if DATASET_NAME == COUNTRIES:
         DATASET_MODELS_FOLDER_PATH = COUNTRIES_MODELS_FOLDER_PATH
@@ -24,6 +26,11 @@ if __name__ == '__main__':
         raise ValueError(f"Invalid dataset name: '{str(DATASET_NAME)}'! \n"
                          f"\t\t Specify one of the following values: \n"
                          f"\t\t [{COUNTRIES}, {FB15K237}, {WN18RR}, {YAGO310}] \n")
+
+    if STRATEGY1 not in {"both", "head", "tail"}:
+        raise ValueError(f"Invalid Strategy1 '{STRATEGY1}'!")
+    if STRATEGY2 not in {"realistic", "optimistic", "pessimistic"}:
+        raise ValueError(f"Invalid Strategy2 '{STRATEGY2}'!")
 
     print(f"\n{'*' * 80}")
     print(DATASET_NAME)
@@ -45,12 +52,12 @@ if __name__ == '__main__':
                 continue
             with open(in_file, "r") as json_file:
                 results_diz = json.load(json_file)
-            mr = round(results_diz["metrics"]["arithmetic_mean_rank"]["both"]["realistic"], 1)
-            mrr = round(results_diz["metrics"]["inverse_harmonic_mean_rank"]["both"]["realistic"], 3)
-            hits_at_1 = round(results_diz["metrics"]["hits_at_k"]["both"]["realistic"]["1"], 3)
-            hits_at_3 = round(results_diz["metrics"]["hits_at_k"]["both"]["realistic"]["3"], 3)
-            hits_at_5 = round(results_diz["metrics"]["hits_at_k"]["both"]["realistic"]["5"], 3)
-            hits_at_10 = round(results_diz["metrics"]["hits_at_k"]["both"]["realistic"]["10"], 3)
+            mr = round(results_diz["metrics"]["arithmetic_mean_rank"][STRATEGY1][STRATEGY2], 1)
+            mrr = round(results_diz["metrics"]["inverse_harmonic_mean_rank"][STRATEGY1][STRATEGY2], 3)
+            hits_at_1 = round(results_diz["metrics"]["hits_at_k"][STRATEGY1][STRATEGY2]["1"], 3)
+            hits_at_3 = round(results_diz["metrics"]["hits_at_k"][STRATEGY1][STRATEGY2]["3"], 3)
+            hits_at_5 = round(results_diz["metrics"]["hits_at_k"][STRATEGY1][STRATEGY2]["5"], 3)
+            hits_at_10 = round(results_diz["metrics"]["hits_at_k"][STRATEGY1][STRATEGY2]["10"], 3)
             current_record = {
                 f"{noise_level}_MR": mr,
                 f"{noise_level}_MRR": mrr,
@@ -73,5 +80,8 @@ if __name__ == '__main__':
     print(df_results)
 
     print("\n >>> Export DataFrame to FS...")
-    out_path = os.path.join(RESULTS_DIR, f"{DATASET_NAME}_results.xlsx")
+    out_path = os.path.join(RESULTS_DIR, f"{DATASET_NAME}_{STRATEGY1}_{STRATEGY2}_results.xlsx")
+    print(f"\t out_path: {out_path}")
+    if os.path.isfile(out_path):
+        raise OSError(f"'{out_path}' already exists!")
     df_results.to_excel(out_path, header=True, index=True, encoding="utf-8", engine="openpyxl")
