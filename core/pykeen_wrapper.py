@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 from pykeen.pipeline import pipeline, PipelineResult
 from pykeen.triples import TriplesFactory
-from pykeen.evaluation.rank_based_evaluator import RankBasedEvaluator, RankBasedMetricResults
+
 
 def get_train_test_validation(training_set_path: str,
                               test_set_path: str,
@@ -50,27 +50,48 @@ def get_train_test_validation_2(knowledge_graph_path: str,
 def train(training: TriplesFactory,
           testing: TriplesFactory,
           validation: TriplesFactory,
-          kge_model_obj: "Pykeen KGE model name") -> PipelineResult:
+          kge_model_obj: "Pykeen KGE model name",
+          num_epochs: int = 5,
+          batch_size: int = 256,
+          model_kwargs: Optional[dict] = None) -> PipelineResult:
     return pipeline(
         training=training,
         validation=validation,
         testing=testing,
+        dataset_kwargs={
+            "create_inverse_triples": False,
+        },
         model=kge_model_obj,
-        # model_kwargs=dict(
-        #     embedding_dim=50
-        # ),
-        # training_kwargs=dict(
-        #     num_epochs=3,
-        #     checkpoint_directory=checkpoint_folder_path,
-        #     checkpoint_name='my_checkpoint.pt',
-        #     checkpoint_frequency=10,
-        #     checkpoint_on_failure=True,
-        # ),
+        model_kwargs=model_kwargs,
+        training_kwargs={
+            "num_epochs": num_epochs,
+            "batch_size": batch_size,
+            # "checkpoint_directory": checkpoint_folder_path,
+            # "checkpoint_name": 'my_checkpoint.pt',
+            # "checkpoint_frequency": 10,
+            # "checkpoint_on_failure": True,
+            "use_tqdm_batch": False,
+        },
         optimizer='Adam',
-        training_loop='sLCWA',
+        clear_optimizer=True,
+        training_loop='slcwa',
         negative_sampler='basic',
-        evaluator=RankBasedEvaluator(),  # RankBasedMetricResults()
         stopper='early',
+        stopper_kwargs={
+            "frequency": 10,
+            "patience": 2,
+            "metric": 'hits_at_k',
+            "relative_delta": 0.01,
+            "larger_is_better": True,
+        },
+        evaluator="RankBasedEvaluator",
+        evaluator_kwargs={
+            "batch_size": batch_size,
+        },
+        evaluation_kwargs={
+            "use_tqdm": True
+        },
+        use_testing_data=True,
         random_seed=1,
         device='gpu',  # 'cpu'
         use_tqdm=True,
