@@ -1,5 +1,5 @@
 import os
-from typing import Tuple
+from typing import Tuple, Union
 
 import pandas as pd
 from pykeen import datasets
@@ -50,8 +50,10 @@ class TsvDatasetLoader:
                  noise_level: str):
         self.dataset_name = dataset_name
         self.noise_level = noise_level
-        if self.noise_level not in {NOISE_1, NOISE_5, NOISE_10}:
-            raise ValueError(f"Invalid noise_level: '{self.noise_level}'!")
+        self.valid_noise_levels = {ORIGINAL, NOISE_1, NOISE_5, NOISE_10}
+        if self.noise_level not in self.valid_noise_levels:
+            raise ValueError(f"Invalid noise_level: '{self.noise_level}'! \n"
+                             f"Specify one of the following values: {self.valid_noise_levels} \n")
         # ============ training ============ #
         self.in_path_noisy_df_training = os.path.join(DATASETS_DIR,
                                                       self.dataset_name,
@@ -109,7 +111,9 @@ class TsvDatasetLoader:
             testing_df = pd.read_csv(filepath_or_buffer=self.in_path_original_df_testing, sep="\t", encoding="utf-8")
         return training_df, validation_df, testing_df
 
-    def get_training_validation_testing_y_fakes(self) -> Tuple[pd.Series, pd.Series, pd.Series]:
+    def get_training_validation_testing_y_fakes(self) -> Union[Tuple[pd.Series, pd.Series, pd.Series], None]:
+        if self.noise_level == ORIGINAL:
+            return None
         training_y_fake = pd.read_csv(filepath_or_buffer=self.in_path_y_fake_training,
                                       sep="\t", encoding="utf-8")[FAKE_FLAG]
         validation_y_fake = pd.read_csv(filepath_or_buffer=self.in_path_y_fake_validation,
@@ -118,5 +122,7 @@ class TsvDatasetLoader:
                                      sep="\t", encoding="utf-8")[FAKE_FLAG]
         return training_y_fake, validation_y_fake, testing_y_fake
 
-    def get_training_validation_testing_y_fakes_paths(self) -> Tuple[str, str, str]:
+    def get_training_validation_testing_y_fakes_paths(self) -> Union[Tuple[str, str, str], None]:
+        if self.noise_level == ORIGINAL:
+            return None
         return self.in_path_y_fake_training, self.in_path_y_fake_validation, self.in_path_y_fake_testing

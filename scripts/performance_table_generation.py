@@ -5,12 +5,12 @@ import pandas as pd
 
 from config import COUNTRIES, FB15K237, WN18RR, YAGO310, \
     COUNTRIES_MODELS_FOLDER_PATH, FB15K237_MODELS_FOLDER_PATH, WN18RR_MODELS_FOLDER_PATH, YAGO310_MODELS_FOLDER_PATH, \
-    NOISE_1, NOISE_5, NOISE_10, RESULTS_DIR
+    NOISE_1, NOISE_5, NOISE_10, RESULTS_DIR, ORIGINAL
 
 if __name__ == '__main__':
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310
-    DATASET_NAME: str = WN18RR
+    DATASET_NAME: str = COUNTRIES
     STRATEGY1: str = "both"  # "both" | "head" | "tail"
     STRATEGY2: str = "realistic"  # "realistic" | "optimistic" | "pessimistic"
 
@@ -40,6 +40,7 @@ if __name__ == '__main__':
     records = {}
 
     for noise_level in [
+        ORIGINAL,
         NOISE_1,
         NOISE_5,
         NOISE_10,
@@ -52,12 +53,13 @@ if __name__ == '__main__':
                 continue
             with open(in_file, "r") as json_file:
                 results_diz = json.load(json_file)
-            mr = round(results_diz["metrics"]["arithmetic_mean_rank"][STRATEGY1][STRATEGY2], 1)
-            mrr = round(results_diz["metrics"]["inverse_harmonic_mean_rank"][STRATEGY1][STRATEGY2], 3)
-            hits_at_1 = round(results_diz["metrics"]["hits_at_k"][STRATEGY1][STRATEGY2]["1"], 3)
-            hits_at_3 = round(results_diz["metrics"]["hits_at_k"][STRATEGY1][STRATEGY2]["3"], 3)
-            hits_at_5 = round(results_diz["metrics"]["hits_at_k"][STRATEGY1][STRATEGY2]["5"], 3)
-            hits_at_10 = round(results_diz["metrics"]["hits_at_k"][STRATEGY1][STRATEGY2]["10"], 3)
+            print(results_diz["metrics"])
+            mr = round(results_diz["metrics"][STRATEGY1][STRATEGY2]["arithmetic_mean_rank"], 1)
+            mrr = round(results_diz["metrics"][STRATEGY1][STRATEGY2]["inverse_harmonic_mean_rank"], 3)
+            hits_at_1 = round(results_diz["metrics"][STRATEGY1][STRATEGY2]["hits_at_1"], 3)
+            hits_at_3 = round(results_diz["metrics"][STRATEGY1][STRATEGY2]["hits_at_3"], 3)
+            hits_at_5 = round(results_diz["metrics"][STRATEGY1][STRATEGY2]["hits_at_5"], 3)
+            hits_at_10 = round(results_diz["metrics"][STRATEGY1][STRATEGY2]["hits_at_10"], 3)
             current_record = {
                 f"{noise_level}_MR": mr,
                 f"{noise_level}_MRR": mrr,

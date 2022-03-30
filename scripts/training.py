@@ -5,7 +5,7 @@ from pykeen.models import *
 from config import COUNTRIES, FB15K237, WN18RR, YAGO310, \
     COUNTRIES_MODELS_FOLDER_PATH, FB15K237_MODELS_FOLDER_PATH, WN18RR_MODELS_FOLDER_PATH, YAGO310_MODELS_FOLDER_PATH, \
     create_non_existent_folder, \
-    NOISE_1, NOISE_5, NOISE_10
+    NOISE_1, NOISE_5, NOISE_10, ORIGINAL
 from core.pykeen_wrapper import get_train_test_validation, train, store, load
 from dao.dataset_loading import TsvDatasetLoader
 
@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310
     DATASET_NAME: str = COUNTRIES
-    FORCE_TRAINING: bool = False
+    FORCE_TRAINING: bool = True
 
     if DATASET_NAME == COUNTRIES:
         DATASET_MODELS_FOLDER_PATH = COUNTRIES_MODELS_FOLDER_PATH
@@ -35,6 +35,7 @@ if __name__ == '__main__':
     print(f"{'*' * 80}\n\n")
 
     for noise_level in [
+        ORIGINAL,
         NOISE_1,
         NOISE_5,
         NOISE_10,
@@ -103,7 +104,10 @@ if __name__ == '__main__':
                 pipeline_result = train(training=training,
                                         testing=testing,
                                         validation=validation,
-                                        kge_model_obj=model_class_name)
+                                        kge_model_obj=model_class_name,
+                                        num_epochs=100,
+                                        batch_size=256,
+                                        stopper=None)
                 store(result_model=pipeline_result, out_dir_path=out_folder_path)
             else:
                 try:

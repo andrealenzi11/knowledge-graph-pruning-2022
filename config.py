@@ -1,10 +1,18 @@
 import os
 import subprocess
+from typing import Sequence
 
 
 def create_non_existent_folder(folder_path: str):
     if not os.path.isdir(folder_path):
         os.makedirs(folder_path)
+
+
+def create_non_existent_folders(root_folder_path: str, sub_folders_paths: Sequence[str]):
+    for sf_p in sub_folders_paths:
+        folder_path = os.path.join(root_folder_path, sf_p)
+        if not os.path.isdir(folder_path):
+            os.makedirs(folder_path)
 
 
 # ==================== Random Seeds ==================== #
@@ -33,6 +41,7 @@ ORIGINAL = "original"
 NOISE_1 = "noise_1"
 NOISE_5 = "noise_5"
 NOISE_10 = "noise_10"
+NOISE_15 = "noise_15"
 # ====================================================== #
 
 # ==================== partitions names ==================== #
@@ -57,6 +66,7 @@ RESULTS_DIR = os.path.join(RESOURCES_DIR, "results")
 create_non_existent_folder(folder_path=RESULTS_DIR)
 # ======================================================================= #
 
+
 # ==================== Datasets ==================== #
 # Datasets Files Names
 TRAINING_TSV = "training.tsv"
@@ -69,102 +79,81 @@ TESTING_Y_FAKE_TSV = "testing_y_fake.tsv"
 # fb15k237 sub-folder
 FB15K237_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, FB15K237)
 create_non_existent_folder(folder_path=FB15K237_DATASETS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(FB15K237_DATASETS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(FB15K237_DATASETS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(FB15K237_DATASETS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(FB15K237_DATASETS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=FB15K237_DATASETS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 
 # wn18rr sub-folder
 WN18RR_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, WN18RR)
 create_non_existent_folder(folder_path=WN18RR_DATASETS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(WN18RR_DATASETS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(WN18RR_DATASETS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(WN18RR_DATASETS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(WN18RR_DATASETS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=WN18RR_DATASETS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 
 # yago310 sub-folder
 YAGO310_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, YAGO310)
 create_non_existent_folder(folder_path=YAGO310_DATASETS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(YAGO310_DATASETS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(YAGO310_DATASETS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(YAGO310_DATASETS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(YAGO310_DATASETS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=YAGO310_DATASETS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 
 # countries sub-folder
 COUNTRIES_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, COUNTRIES)
 create_non_existent_folder(folder_path=COUNTRIES_DATASETS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_DATASETS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_DATASETS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_DATASETS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_DATASETS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=COUNTRIES_DATASETS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 # ================================================== #
+
 
 # ==================== Models ==================== #
 # fb15k237 sub-folder
 FB15K237_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, FB15K237)
 create_non_existent_folder(folder_path=FB15K237_MODELS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(FB15K237_MODELS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(FB15K237_MODELS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(FB15K237_MODELS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(FB15K237_MODELS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=FB15K237_MODELS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 
 # wn18rr sub-folder
 WN18RR_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, WN18RR)
 create_non_existent_folder(folder_path=WN18RR_MODELS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(WN18RR_MODELS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(WN18RR_MODELS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(WN18RR_MODELS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(WN18RR_MODELS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=WN18RR_MODELS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 
 # yago310 sub-folder
 YAGO310_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, YAGO310)
 create_non_existent_folder(folder_path=YAGO310_MODELS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(YAGO310_MODELS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(YAGO310_MODELS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(YAGO310_MODELS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(YAGO310_MODELS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=YAGO310_MODELS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+
 
 # countries sub-folder
 COUNTRIES_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, COUNTRIES)
 create_non_existent_folder(folder_path=COUNTRIES_MODELS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_MODELS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_MODELS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_MODELS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_MODELS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=COUNTRIES_MODELS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+
 # ================================================== #
 
 # ==================== Checkpoints ==================== #
 # fb15k237 sub-folder
 FB15K237_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, FB15K237)
 create_non_existent_folder(folder_path=FB15K237_CHECKPOINTS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(FB15K237_CHECKPOINTS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(FB15K237_CHECKPOINTS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(FB15K237_CHECKPOINTS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(FB15K237_CHECKPOINTS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=FB15K237_CHECKPOINTS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 
 # wn18rr sub-folder
 WN18RR_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, WN18RR)
 create_non_existent_folder(folder_path=WN18RR_CHECKPOINTS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(WN18RR_CHECKPOINTS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(WN18RR_CHECKPOINTS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(WN18RR_CHECKPOINTS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(WN18RR_CHECKPOINTS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=WN18RR_CHECKPOINTS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 
 # yago310 sub-folder
 YAGO310_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, YAGO310)
 create_non_existent_folder(folder_path=YAGO310_CHECKPOINTS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(YAGO310_CHECKPOINTS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(YAGO310_CHECKPOINTS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(YAGO310_CHECKPOINTS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(YAGO310_CHECKPOINTS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=YAGO310_CHECKPOINTS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 
 # countries sub-folder
 COUNTRIES_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, COUNTRIES)
 create_non_existent_folder(folder_path=COUNTRIES_CHECKPOINTS_FOLDER_PATH)
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_CHECKPOINTS_FOLDER_PATH, ORIGINAL))
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_CHECKPOINTS_FOLDER_PATH, NOISE_1))
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_CHECKPOINTS_FOLDER_PATH, NOISE_5))
-create_non_existent_folder(folder_path=os.path.join(COUNTRIES_CHECKPOINTS_FOLDER_PATH, NOISE_10))
+create_non_existent_folders(root_folder_path=COUNTRIES_CHECKPOINTS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 # ===================================================== #
 
 
