@@ -34,6 +34,7 @@ FB15K237 = "FB15K237"
 WN18RR = "WN18RR"
 YAGO310 = "YAGO310"
 COUNTRIES = "COUNTRIES"
+CODEXSMALL = "CODEXSMALL"
 # ======================================================== #
 
 # ==================== Noise Levels ==================== #
@@ -99,6 +100,12 @@ COUNTRIES_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, COUNTRIES)
 create_non_existent_folder(folder_path=COUNTRIES_DATASETS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=COUNTRIES_DATASETS_FOLDER_PATH,
                             sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+
+# CoDExSmall sub-folder
+CODEXSMALL_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, CODEXSMALL)
+create_non_existent_folder(folder_path=CODEXSMALL_DATASETS_FOLDER_PATH)
+create_non_existent_folders(root_folder_path=CODEXSMALL_DATASETS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 # ================================================== #
 
 
@@ -128,6 +135,11 @@ create_non_existent_folder(folder_path=COUNTRIES_MODELS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=COUNTRIES_MODELS_FOLDER_PATH,
                             sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 
+# CoDExSmall sub-folder
+CODEXSMALL_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, CODEXSMALL)
+create_non_existent_folder(folder_path=CODEXSMALL_MODELS_FOLDER_PATH)
+create_non_existent_folders(root_folder_path=CODEXSMALL_MODELS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 # ================================================== #
 
 # ==================== Checkpoints ==================== #
@@ -154,11 +166,17 @@ COUNTRIES_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, COUNTRIES)
 create_non_existent_folder(folder_path=COUNTRIES_CHECKPOINTS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=COUNTRIES_CHECKPOINTS_FOLDER_PATH,
                             sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+
+# CoDExSmall sub-folder
+CODEXSMALL_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, CODEXSMALL)
+create_non_existent_folder(folder_path=CODEXSMALL_CHECKPOINTS_FOLDER_PATH)
+create_non_existent_folders(root_folder_path=CODEXSMALL_CHECKPOINTS_FOLDER_PATH,
+                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 # ===================================================== #
 
 
-# ===== Download FB15K237 Mapping Json file ===== #
-# repo with mapping: https://github.com/villmow/datasets_knowledge_embedding
+# ===== Download FB15K237 Entities Mapping Json file
+#       from Repo https://github.com/villmow/datasets_knowledge_embedding ===== #
 FB15K237_MAPPING_FILE = os.path.join(FB15K237_DATASETS_FOLDER_PATH, "entity2wikidata.json")
 FB15K237_MAPPING_URL = \
     "https://raw.githubusercontent.com/villmow/datasets_knowledge_embedding/master/FB15k-237/entity2wikidata.json"
@@ -170,4 +188,38 @@ if not os.path.isfile(FB15K237_MAPPING_FILE):
         raise ValueError(f"Error in download FB15K237 mapping file! \n"
                          f"\t\t (1) Download it manually from the following URL: {FB15K237_MAPPING_URL} \n"
                          f"\t\t (2) Put this Json file inside the folder: {FB15K237_DATASETS_FOLDER_PATH} \n")
-# ================================================== #
+# ============================================================================== #
+
+
+# ===== Download CODEXSMALL Entities/Relations Mapping Json files from Repo https://github.com/tsafavi/codex ===== #
+
+# entities map
+CODEXSMALL_ENTITIES_MAPPING_FILE = os.path.join(CODEXSMALL_DATASETS_FOLDER_PATH, "entities.json")
+CODEXSMALL_ENTITIES_MAPPING_URL = \
+    "https://raw.githubusercontent.com/tsafavi/codex/master/data/entities/en/entities.json"
+
+if not os.path.isfile(CODEXSMALL_ENTITIES_MAPPING_FILE):
+    try:
+        subprocess.run([
+            'wget', '--no-check-certificate', CODEXSMALL_ENTITIES_MAPPING_URL, '-O', CODEXSMALL_ENTITIES_MAPPING_FILE
+        ])
+    except Exception:
+        raise ValueError(f"Error in download CODEXSMALL mapping file for Entities! \n"
+                         f"\t\t (1) Download it manually from the following URL: {CODEXSMALL_ENTITIES_MAPPING_URL} \n"
+                         f"\t\t (2) Put this Json file inside the folder: {CODEXSMALL_DATASETS_FOLDER_PATH} \n")
+
+# relations map
+CODEXSMALL_RELATIONS_MAPPING_FILE = os.path.join(CODEXSMALL_DATASETS_FOLDER_PATH, "relations.json")
+CODEXSMALL_RELATIONS_MAPPING_URL = \
+    "https://raw.githubusercontent.com/tsafavi/codex/master/data/relations/en/relations.json"
+
+if not os.path.isfile(CODEXSMALL_RELATIONS_MAPPING_FILE):
+    try:
+        subprocess.run([
+            'wget', '--no-check-certificate', CODEXSMALL_RELATIONS_MAPPING_URL, '-O', CODEXSMALL_RELATIONS_MAPPING_FILE
+        ])
+    except Exception:
+        raise ValueError(f"Error in download CODEXSMALL mapping file for Relations! \n"
+                         f"\t\t (1) Download it manually from the following URL: {CODEXSMALL_RELATIONS_MAPPING_URL} \n"
+                         f"\t\t (2) Put this Json file inside the folder: {CODEXSMALL_DATASETS_FOLDER_PATH} \n")
+# =====================================================================================================================#

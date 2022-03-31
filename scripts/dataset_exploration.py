@@ -1,9 +1,9 @@
-from pykeen.datasets import FB15k237, WN18RR, YAGO310, UMLS, Countries
+from pykeen.datasets import FB15k237, WN18RR, YAGO310, UMLS, Countries, CoDExSmall
 
 if __name__ == '__main__':
 
-    # "FB15k237" | "WN18RR" | "YAGO310" | "UMLS" | "Countries"
-    dataset_name = "YAGO310"
+    # "FB15k237" | "WN18RR" | "YAGO310" | "UMLS" | "Countries" | "CoDExSmall"
+    dataset_name = "CoDExSmall"
     print(f"\n {'#'* 10} {dataset_name} {'#'* 10} \n")
 
     if dataset_name == "FB15k237":
@@ -16,6 +16,8 @@ if __name__ == '__main__':
         dataset = UMLS(create_inverse_triples=False)
     elif dataset_name == "Countries":
         dataset = Countries(create_inverse_triples=False)
+    elif dataset_name == "CoDExSmall":
+        dataset = CoDExSmall(create_inverse_triples=False)
     else:
         raise ValueError("Invalid pykeen_dataset name!")
 

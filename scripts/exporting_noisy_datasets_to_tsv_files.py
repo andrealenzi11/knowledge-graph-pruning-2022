@@ -3,14 +3,16 @@ import os
 from config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
     WN18RR, WN18RR_DATASETS_FOLDER_PATH, \
     YAGO310, YAGO310_DATASETS_FOLDER_PATH, \
-    COUNTRIES_DATASETS_FOLDER_PATH, COUNTRIES, \
-    ORIGINAL, NOISE_1, NOISE_5, NOISE_10, \
+    COUNTRIES, COUNTRIES_DATASETS_FOLDER_PATH,  \
+    CODEXSMALL, CODEXSMALL_DATASETS_FOLDER_PATH, \
+    ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, \
     TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
     VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
     TESTING_TSV, TESTING_Y_FAKE_TSV, \
     RANDOM_SEED_HEAD_SAMPLING, RANDOM_SEED_RELATION_SAMPLING, RANDOM_SEED_TAIL_SAMPLING
 from core.noise_generation import DeterministicNoiseGenerator
 from dao.dataset_loading import TsvDatasetLoader
+
 
 if __name__ == '__main__':
 
@@ -19,6 +21,7 @@ if __name__ == '__main__':
         (WN18RR, WN18RR_DATASETS_FOLDER_PATH),
         (YAGO310, YAGO310_DATASETS_FOLDER_PATH),
         (COUNTRIES, COUNTRIES_DATASETS_FOLDER_PATH),
+        (CODEXSMALL, CODEXSMALL_DATASETS_FOLDER_PATH),
     ]:
 
         print(f"\n\n>>>>>>>>>>>>>>>>>>>> {dataset_name} <<<<<<<<<<<<<<<<<<<<")
@@ -26,7 +29,12 @@ if __name__ == '__main__':
         tsv_dataset_loader = TsvDatasetLoader(dataset_name=dataset_name,
                                               noise_level=ORIGINAL)
 
-        df_training, df_validation, df_testing = tsv_dataset_loader.get_training_validation_testing_dfs()
+        print(tsv_dataset_loader.in_path_noisy_df_training)
+        print(tsv_dataset_loader.in_path_noisy_df_validation)
+        print(tsv_dataset_loader.in_path_noisy_df_testing)
+
+        df_training, df_validation, df_testing = \
+            tsv_dataset_loader.get_training_validation_testing_dfs(noisy_test_flag=False)
         print(f"training_shape={df_training.shape} \n"
               f"validation_shape={df_validation.shape} \n"
               f"testing_shape={df_testing.shape} \n")
@@ -42,6 +50,7 @@ if __name__ == '__main__':
             (1, NOISE_1),
             (5, NOISE_5),
             (10, NOISE_10),
+            (15, NOISE_15),
         ]:
             print(f"\n{'-' * 80}")
             print(f"{noise_percentage_num}  |  {noise_percentage_folder}")

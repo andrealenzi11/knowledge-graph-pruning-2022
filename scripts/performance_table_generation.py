@@ -5,9 +5,16 @@ import pandas as pd
 
 from config import COUNTRIES, FB15K237, WN18RR, YAGO310, \
     COUNTRIES_MODELS_FOLDER_PATH, FB15K237_MODELS_FOLDER_PATH, WN18RR_MODELS_FOLDER_PATH, YAGO310_MODELS_FOLDER_PATH, \
-    NOISE_1, NOISE_5, NOISE_10, RESULTS_DIR, ORIGINAL
+    RESULTS_DIR, ORIGINAL, NOISE_5, NOISE_10, NOISE_15
+
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
+
 
 if __name__ == '__main__':
+
+    force_saving = True
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310
     DATASET_NAME: str = COUNTRIES
@@ -41,9 +48,9 @@ if __name__ == '__main__':
 
     for noise_level in [
         ORIGINAL,
-        NOISE_1,
         NOISE_5,
         NOISE_10,
+        NOISE_15,
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
         in_folder_path = os.path.join(DATASET_MODELS_FOLDER_PATH, noise_level)
@@ -61,15 +68,15 @@ if __name__ == '__main__':
             hits_at_5 = round(results_diz["metrics"][STRATEGY1][STRATEGY2]["hits_at_5"], 3)
             hits_at_10 = round(results_diz["metrics"][STRATEGY1][STRATEGY2]["hits_at_10"], 3)
             current_record = {
-                f"{noise_level}_MR": mr,
+                # f"{noise_level}_MR": mr,
                 f"{noise_level}_MRR": mrr,
-                f"{noise_level}_hits1": hits_at_1,
-                f"{noise_level}_hits3": hits_at_3,
-                f"{noise_level}_hits5": hits_at_5,
-                f"{noise_level}_hits10": hits_at_10,
+                # f"{noise_level}_hits1": hits_at_1,
+                # f"{noise_level}_hits3": hits_at_3,
+                # f"{noise_level}_hits5": hits_at_5,
+                # f"{noise_level}_hits10": hits_at_10,
             }
             if model_name not in records:
-                records[model_name] = current_record    # insert new record
+                records[model_name] = current_record  # insert new record
             else:
                 records[model_name] = {**records[model_name], **current_record}  # update (merge)
 
@@ -84,6 +91,6 @@ if __name__ == '__main__':
     print("\n >>> Export DataFrame to FS...")
     out_path = os.path.join(RESULTS_DIR, f"{DATASET_NAME}_{STRATEGY1}_{STRATEGY2}_results.xlsx")
     print(f"\t out_path: {out_path}")
-    if os.path.isfile(out_path):
+    if (os.path.isfile(out_path)) and (not force_saving):
         raise OSError(f"'{out_path}' already exists!")
     df_results.to_excel(out_path, header=True, index=True, encoding="utf-8", engine="openpyxl")

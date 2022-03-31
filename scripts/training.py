@@ -2,18 +2,18 @@ import os
 
 from pykeen.models import *
 
-from config import COUNTRIES, FB15K237, WN18RR, YAGO310, \
-    COUNTRIES_MODELS_FOLDER_PATH, FB15K237_MODELS_FOLDER_PATH, WN18RR_MODELS_FOLDER_PATH, YAGO310_MODELS_FOLDER_PATH, \
+from config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
+    COUNTRIES_MODELS_FOLDER_PATH, FB15K237_MODELS_FOLDER_PATH, WN18RR_MODELS_FOLDER_PATH, \
+    YAGO310_MODELS_FOLDER_PATH, CODEXSMALL_DATASETS_FOLDER_PATH, \
     create_non_existent_folder, \
-    NOISE_1, NOISE_5, NOISE_10, ORIGINAL
+    NOISE_5, NOISE_10, ORIGINAL, NOISE_15
 from core.pykeen_wrapper import get_train_test_validation, train, store, load
 from dao.dataset_loading import TsvDatasetLoader
 
-
 if __name__ == '__main__':
 
-    # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310
-    DATASET_NAME: str = COUNTRIES
+    # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
+    DATASET_NAME: str = CODEXSMALL
     FORCE_TRAINING: bool = True
 
     if DATASET_NAME == COUNTRIES:
@@ -24,10 +24,12 @@ if __name__ == '__main__':
         DATASET_MODELS_FOLDER_PATH = WN18RR_MODELS_FOLDER_PATH
     elif DATASET_NAME == YAGO310:
         DATASET_MODELS_FOLDER_PATH = YAGO310_MODELS_FOLDER_PATH
+    elif DATASET_NAME == CODEXSMALL:
+        DATASET_MODELS_FOLDER_PATH = CODEXSMALL_DATASETS_FOLDER_PATH
     else:
         raise ValueError(f"Invalid dataset name: '{str(DATASET_NAME)}'! \n"
                          f"\t\t Specify one of the following values: \n"
-                         f"\t\t [{COUNTRIES}, {FB15K237}, {WN18RR}, {YAGO310}] \n")
+                         f"\t\t [{COUNTRIES}, {FB15K237}, {WN18RR}, {YAGO310}], {CODEXSMALL} \n")
 
     print(f"\n{'*' * 80}")
     print(DATASET_NAME)
@@ -36,9 +38,9 @@ if __name__ == '__main__':
 
     for noise_level in [
         ORIGINAL,
-        NOISE_1,
         NOISE_5,
         NOISE_10,
+        NOISE_15,
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
         datasets_loader = TsvDatasetLoader(dataset_name=DATASET_NAME, noise_level=noise_level)
@@ -105,9 +107,9 @@ if __name__ == '__main__':
                                         testing=testing,
                                         validation=validation,
                                         kge_model_obj=model_class_name,
-                                        num_epochs=100,
+                                        num_epochs=200,
                                         batch_size=256,
-                                        stopper=None)
+                                        stopper="early")
                 store(result_model=pipeline_result, out_dir_path=out_folder_path)
             else:
                 try:

@@ -7,7 +7,9 @@ from pykeen import datasets
 from config import DATASETS_DIR, FAKE_FLAG, \
     TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
     VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
-    TESTING_TSV, TESTING_Y_FAKE_TSV, FB15K237, WN18RR, YAGO310, COUNTRIES, ORIGINAL, NOISE_1, NOISE_5, NOISE_10
+    TESTING_TSV, TESTING_Y_FAKE_TSV, \
+    FB15K237, WN18RR, YAGO310, COUNTRIES, CODEXSMALL, \
+    ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15
 
 
 class PykeenDatasetLoader:
@@ -35,6 +37,10 @@ class PykeenDatasetLoader:
         elif self.dataset_name == COUNTRIES:
             return datasets.Countries(create_inverse_triples=False)
 
+        # ===== 'CoDExSmall' dataset ===== #
+        elif self.dataset_name == CODEXSMALL:
+            return datasets.CoDExSmall(create_inverse_triples=False)
+
         # ===== Error ===== #
         else:
             raise ValueError(F"Invalid pykeen_dataset name '{self.dataset_name}'!")
@@ -50,7 +56,7 @@ class TsvDatasetLoader:
                  noise_level: str):
         self.dataset_name = dataset_name
         self.noise_level = noise_level
-        self.valid_noise_levels = {ORIGINAL, NOISE_1, NOISE_5, NOISE_10}
+        self.valid_noise_levels = {ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15}
         if self.noise_level not in self.valid_noise_levels:
             raise ValueError(f"Invalid noise_level: '{self.noise_level}'! \n"
                              f"Specify one of the following values: {self.valid_noise_levels} \n")

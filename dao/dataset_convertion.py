@@ -14,9 +14,11 @@ class DatasetConverter:
 
     def __init__(self,
                  pykeen_dataset: datasets.Dataset,
-                 id_label_map: Optional[dict] = None):
+                 id_label_map1: Optional[dict] = None,
+                 id_label_map2: Optional[dict] = None):
         self.pykeen_dataset = pykeen_dataset
-        self.id_label_map = id_label_map
+        self.id_label_map1 = id_label_map1   # Entities Map
+        self.id_label_map2 = id_label_map2   # Relations Map
 
     def get_training_df(self) -> pd.DataFrame:
         training_df = pd.DataFrame(data=self.pykeen_dataset.training.triples,
@@ -37,14 +39,21 @@ class DatasetConverter:
         return self._from_entity_ids_to_entity_labels(triples_df=testing_df)
 
     def _from_entity_ids_to_entity_labels(self, triples_df: pd.DataFrame) -> pd.DataFrame:
-        if self.id_label_map and isinstance(self.id_label_map, dict):
+        if self.id_label_map1 and isinstance(self.id_label_map1, dict):
             errors_cnt = 0
             records = list()
             for h, r, t in zip(triples_df[HEAD], triples_df[RELATION], triples_df[TAIL]):
                 try:
-                    h_label = self._preprocess_entity(text=self.id_label_map[str(h).lstrip("0")])
-                    t_label = self._preprocess_entity(text=self.id_label_map[str(t).lstrip("0")])
-                    records.append((h_label, r, t_label))
+                    # Get labels from entities ids
+                    h_label = self._preprocess_entity(text=self.id_label_map1[str(h).lstrip("0")])
+                    t_label = self._preprocess_entity(text=self.id_label_map1[str(t).lstrip("0")])
+                    # Eventually, get label from relation id
+                    if self.id_label_map2 and isinstance(self.id_label_map2, dict):
+                        r_label = self._preprocess_entity(text=self.id_label_map2[str(r).lstrip("0")])
+                    else:
+                        r_label = r
+                    # Append resolved triple to records list
+                    records.append((h_label, r_label, t_label))
                 except KeyError:
                     errors_cnt += 1
             print(f"\t #triples_with_mapping_errors: {errors_cnt}")
