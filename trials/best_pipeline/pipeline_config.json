@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "best_trial_evaluation": 0.5887656325156325,
+    "best_trial_number": 3,
+    "git_hash": "36625505",
+    "version": "1.8.0"
+  },
+  "pipeline": {
+    "dataset": "countries",
+    "evaluator": "rankbased",
+    "filter_validation_when_testing": true,
+    "loss": "marginranking",
+    "loss_kwargs": {
+      "margin": 2.999266333663192
+    },
+    "model": "transe",
+    "model_kwargs": {
+      "embedding_dim": 208,
+      "scoring_fct_norm": 2
+    },
+    "negative_sampler": "basic",
+    "negative_sampler_kwargs": {
+      "num_negs_per_pos": 88
+    },
+    "optimizer": "adam",
+    "optimizer_kwargs": {
+      "lr": 0.0002868886786585442
+    },
+    "training_kwargs": {
+      "batch_size": 256,
+      "num_epochs": 190,
+      "use_tqdm_batch": false
+    },
+    "training_loop": "slcwa"
+  }
+}

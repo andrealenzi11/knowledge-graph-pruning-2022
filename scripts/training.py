@@ -3,37 +3,33 @@ import os
 from pykeen.models import *
 
 from config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
-    COUNTRIES_MODELS_FOLDER_PATH, FB15K237_MODELS_FOLDER_PATH, WN18RR_MODELS_FOLDER_PATH, \
-    YAGO310_MODELS_FOLDER_PATH, CODEXSMALL_DATASETS_FOLDER_PATH, \
     create_non_existent_folder, \
     NOISE_5, NOISE_10, ORIGINAL, NOISE_15
+from core.fabrication import DatasetModelsFolderPathFactory
 from core.pykeen_wrapper import get_train_test_validation, train, store, load
 from dao.dataset_loading import TsvDatasetLoader
 
 if __name__ == '__main__':
 
-    # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
-    DATASET_NAME: str = CODEXSMALL
-    FORCE_TRAINING: bool = True
+    # === Set your training configuration === #
+    dataset_name: str = CODEXSMALL  # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
+    force_training: bool = False
+    num_epochs = 200  # default: 5
+    batch_size = 256  # default: 256
+    stopper = "early"  # "early" | None
 
-    if DATASET_NAME == COUNTRIES:
-        DATASET_MODELS_FOLDER_PATH = COUNTRIES_MODELS_FOLDER_PATH
-    elif DATASET_NAME == FB15K237:
-        DATASET_MODELS_FOLDER_PATH = FB15K237_MODELS_FOLDER_PATH
-    elif DATASET_NAME == WN18RR:
-        DATASET_MODELS_FOLDER_PATH = WN18RR_MODELS_FOLDER_PATH
-    elif DATASET_NAME == YAGO310:
-        DATASET_MODELS_FOLDER_PATH = YAGO310_MODELS_FOLDER_PATH
-    elif DATASET_NAME == CODEXSMALL:
-        DATASET_MODELS_FOLDER_PATH = CODEXSMALL_DATASETS_FOLDER_PATH
-    else:
-        raise ValueError(f"Invalid dataset name: '{str(DATASET_NAME)}'! \n"
-                         f"\t\t Specify one of the following values: \n"
-                         f"\t\t [{COUNTRIES}, {FB15K237}, {WN18RR}, {YAGO310}], {CODEXSMALL} \n")
+    all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL}
+    print(f"all_datasets_names: {all_datasets_names}")
+    dataset_models_folder_path = DatasetModelsFolderPathFactory().get(dataset_name=dataset_name)
 
     print(f"\n{'*' * 80}")
-    print(DATASET_NAME)
-    print(DATASET_MODELS_FOLDER_PATH)
+    print("TRAINING CONFIGURATION")
+    print(f"\t\t dataset_name: {dataset_name}")
+    print(f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
+    print(f"\t\t force_training: {force_training}")
+    print(f"\t\t num_epochs: {num_epochs}")
+    print(f"\t\t batch_size {batch_size}")
+    print(f"\t\t stopper: {stopper}")
     print(f"{'*' * 80}\n\n")
 
     for noise_level in [
@@ -43,7 +39,7 @@ if __name__ == '__main__':
         NOISE_15,
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
-        datasets_loader = TsvDatasetLoader(dataset_name=DATASET_NAME, noise_level=noise_level)
+        datasets_loader = TsvDatasetLoader(dataset_name=dataset_name, noise_level=noise_level)
         training_path, validation_path, testing_path = \
             datasets_loader.get_training_validation_testing_dfs_paths(noisy_test_flag=False)
 
@@ -79,50 +75,42 @@ if __name__ == '__main__':
             ("ComplEx", ComplEx, 2016),
             ("HolE", HolE, 2016),
             ("ConvE", ConvE, 2018),
-            # ("ConvKB", ConvKB, 2018), # MemoryError: The current model can't be trained on this hardware with these parameters.
-            ("RGCN", RGCN, 2018),  # RuntimeError: CUDA out of memory (sometimes)
+            # ("ConvKB", ConvKB, 2018), # MemoryError: The current model can't be trained on this hardware
+            # ("RGCN", RGCN, 2018),  # RuntimeError: CUDA out of memory (sometimes)
             ("RotatE", RotatE, 2019),
             ("PairRE", PairRE, 2020),
             ("AutoSF", AutoSF, 2020),
             ("BoxE", BoxE, 2020),
-            # === MemoryError: The current model can't be trained on this hardware with these parameters ===  #
-            # ("TuckER", TuckER, 2019),
-            # =============================================================================================== #
-            # === AssertionError: assert triples_factory.create_inverse_triples === #
-            # ("CompGCN", CompGCN, 2020),
-            # ===================================================================== #
-            # === ValueError: The provided triples factory does not create inverse triples === #
-            # ("NodePiece", NodePiece, 2021),
-            # ================================================================================ #
         ]:
             print(f"\n>>>>>>>>>>>>>>>>>>>> {model_name} ({year}) <<<<<<<<<<<<<<<<<<<<")
 
-            out_folder_path = os.path.join(DATASET_MODELS_FOLDER_PATH, noise_level, model_name)
-            print(f"\n out_folder_path: {out_folder_path}")
+            out_folder_path = os.path.join(dataset_models_folder_path, noise_level, model_name)
+            print(f"\n\t - out_folder_path: {out_folder_path}")
             create_non_existent_folder(folder_path=out_folder_path)
 
-            if FORCE_TRAINING:
-                print("Training...")
+            # Try to Load an already trained KGE model from File System
+            if not force_training:
+                print(f"\t - Try to loading already trained '{model_name}' model...")
+                try:
+                    pipeline_result = load(in_dir_path=out_folder_path)
+                    print(f"\t <> '{model_name}' model loaded from File System!")
+                except FileNotFoundError:
+                    print(f"\t <> '{model_name}' model NOT already present in the File System!")
+                    force_training = True
+
+            # Train a new KGE model and store it on File System
+            if force_training:
+                print(f"\t - Training '{model_name}' model...")
                 pipeline_result = train(training=training,
                                         testing=testing,
                                         validation=validation,
                                         kge_model_obj=model_class_name,
-                                        num_epochs=200,
-                                        batch_size=256,
-                                        stopper="early")
-                store(result_model=pipeline_result, out_dir_path=out_folder_path)
-            else:
-                try:
-                    print("Try to loading already trained KGE model...")
-                    pipeline_result = load(in_dir_path=out_folder_path)
-                    print("KGE model load from File System!")
-                except FileNotFoundError:
-                    print("Training...")
-                    pipeline_result = train(training=training,
-                                            testing=testing,
-                                            validation=validation,
-                                            kge_model_obj=model_class_name)
-                    store(result_model=pipeline_result, out_dir_path=out_folder_path)
+                                        num_epochs=num_epochs,
+                                        batch_size=batch_size,
+                                        stopper=stopper)
+                print(f"- Saving '{model_name}' model......")
+                store(result_model=pipeline_result,
+                      out_dir_path=out_folder_path)
 
             print(f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
 

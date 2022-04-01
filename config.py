@@ -51,6 +51,25 @@ VALIDATION = "validation"
 TESTING = "testing"
 # ========================================================== #
 
+
+# ==================== metrics names and evaluation strategy ==================== #
+MR = "mr"   # arithmetic_mean_rank
+MRR = "mrr"  # inverse_harmonic_mean_rank
+HITS_AT_1 = "hits_at_1"  # hits_at_K=1
+HITS_AT_3 = "hits_at_3"  # hits_at_K=3
+HITS_AT_5 = "hits_at_5"  # hits_at_K=5
+HITS_AT_10 = "hits_at_10"  # hits_at_K=10
+
+BOTH_STRATEGY = "both"
+HEAD_STRATEGY = "head"
+TAIL_STRATEGY = "tail"
+
+REALISTIC_STRATEGY = "realistic"
+OPTIMISTIC_STRATEGY = "optimistic"
+PESSIMISTIC_STRATEGY = "pessimistic"
+# ============================================================================== #
+
+
 # ==================== First Level Resources Folders ==================== #
 RESOURCES_DIR = os.path.join(os.environ['HOME'], "resources", "graph_pruning")
 
