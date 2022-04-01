@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from config import TRAINING_TSV, VALIDATION_TSV, TESTING_TSV
+from config.config import TRAINING_TSV, VALIDATION_TSV, TESTING_TSV
 
 
 class DatasetExporter:

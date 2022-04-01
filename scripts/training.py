@@ -1,34 +1,34 @@
 import os
 
-from pykeen.models import *
-
-from config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
+from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
     create_non_existent_folder, \
-    NOISE_5, NOISE_10, ORIGINAL, NOISE_15
-from core.fabrication import DatasetModelsFolderPathFactory
+    ORIGINAL, NOISE_5, NOISE_10, NOISE_15, \
+    RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
+from config.kge_models_config import HYPERPARAMS_CONFIG
+from core.fabrication import DatasetPathFactory
 from core.pykeen_wrapper import get_train_test_validation, train, store, load
 from dao.dataset_loading import TsvDatasetLoader
 
 if __name__ == '__main__':
 
     # === Set your training configuration === #
-    dataset_name: str = CODEXSMALL  # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
+    dataset_name: str = COUNTRIES  # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
     force_training: bool = False
-    num_epochs = 200  # default: 5
-    batch_size = 256  # default: 256
-    stopper = "early"  # "early" | None
+    # num_epochs = 200  # default: 5
+    # batch_size = 256  # default: 256
+    stopper = None  # "early" | None
 
     all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL}
     print(f"all_datasets_names: {all_datasets_names}")
-    dataset_models_folder_path = DatasetModelsFolderPathFactory().get(dataset_name=dataset_name)
+    dataset_models_folder_path = DatasetPathFactory(dataset_name=dataset_name).get_models_folder_path()
 
     print(f"\n{'*' * 80}")
     print("TRAINING CONFIGURATION")
     print(f"\t\t dataset_name: {dataset_name}")
     print(f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
     print(f"\t\t force_training: {force_training}")
-    print(f"\t\t num_epochs: {num_epochs}")
-    print(f"\t\t batch_size {batch_size}")
+    # print(f"\t\t num_epochs: {num_epochs}")
+    # print(f"\t\t batch_size {batch_size}")
     print(f"\t\t stopper: {stopper}")
     print(f"{'*' * 80}\n\n")
 
@@ -65,22 +65,18 @@ if __name__ == '__main__':
 
         print("\n\n>>> Start KGE models training...\n")
 
-        for model_name, model_class_name, year in [
-            ("RESCAL", RESCAL, 2011),
-            ("TransE", TransE, 2013),
-            ("DistMult", DistMult, 2014),
-            ("TransH", TransH, 2014),
-            ("TransR", TransR, 2015),
-            ("TransD", TransD, 2015),
-            ("ComplEx", ComplEx, 2016),
-            ("HolE", HolE, 2016),
-            ("ConvE", ConvE, 2018),
-            # ("ConvKB", ConvKB, 2018), # MemoryError: The current model can't be trained on this hardware
-            # ("RGCN", RGCN, 2018),  # RuntimeError: CUDA out of memory (sometimes)
-            ("RotatE", RotatE, 2019),
-            ("PairRE", PairRE, 2020),
-            ("AutoSF", AutoSF, 2020),
-            ("BoxE", BoxE, 2020),
+        for model_name, year in [
+            (RESCAL, 2011),
+            (TRANSE, 2013),
+            (DISTMULT, 2014),
+            (TRANSH, 2014),
+            (COMPLEX, 2016),
+            (HOLE, 2016),
+            (CONVE, 2018),
+            (ROTATE, 2019),
+            (PAIRRE, 2020),
+            (AUTOSF, 2020),
+            (BOXE, 2020),
         ]:
             print(f"\n>>>>>>>>>>>>>>>>>>>> {model_name} ({year}) <<<<<<<<<<<<<<<<<<<<")
 
@@ -100,14 +96,45 @@ if __name__ == '__main__':
 
             # Train a new KGE model and store it on File System
             if force_training:
+
+                print("\t - Load best Hyper-parameters")
+                kwargs_diz = {
+                    "model": None,
+                    "training": None,
+                    "loss": None,
+                    "regularizer": None,
+                    "optimizer": None,
+                    "negative_sampler": None,
+                }
+                try:
+                    hyperparams_diz = HYPERPARAMS_CONFIG[dataset_name][model_name]
+                    for k, v in hyperparams_diz.items():
+                        arr_tmp = k.split(".")
+                        assert len(arr_tmp) == 2
+                        component, hp = arr_tmp[0].strip(), arr_tmp[1].strip()
+                        if kwargs_diz[component] is None:
+                            kwargs_diz[component] = {hp: v}
+                        else:
+                            kwargs_diz[component][hp] = v
+                except KeyError as k_err:
+                    print(k_err)
+                print(f"\t - kwargs_diz: {kwargs_diz}")
+
                 print(f"\t - Training '{model_name}' model...")
-                pipeline_result = train(training=training,
-                                        testing=testing,
-                                        validation=validation,
-                                        kge_model_obj=model_class_name,
-                                        num_epochs=num_epochs,
-                                        batch_size=batch_size,
-                                        stopper=stopper)
+                pipeline_result = train(
+                    training=training,
+                    testing=testing,
+                    validation=validation,
+                    model_name=model_name,
+                    model_kwargs=kwargs_diz["model"],
+                    training_kwargs=kwargs_diz["training"],
+                    loss_kwargs=kwargs_diz["loss"],
+                    regularizer_kwargs=kwargs_diz["regularizer"],
+                    optimizer_kwargs=kwargs_diz["optimizer"],
+                    negative_sampler_kwargs=kwargs_diz["negative_sampler"],
+                    stopper=stopper,
+                )
+
                 print(f"- Saving '{model_name}' model......")
                 store(result_model=pipeline_result,
                       out_dir_path=out_folder_path)

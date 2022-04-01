@@ -1,5 +1,5 @@
 from pprint import pprint
-
+from pykeen.models import TransE
 from pykeen.datasets.countries import Countries
 
 from pykeen.pipeline import pipeline
@@ -9,7 +9,7 @@ dataset_countries = Countries()
 print(dataset_countries.__dict__)
 
 result = pipeline(
-    model='TransE',
+    model=TransE().half(),
     dataset='WN18RR',
     training_kwargs={
         "num_epochs": 5,

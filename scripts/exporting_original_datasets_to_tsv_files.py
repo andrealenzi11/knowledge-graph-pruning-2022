@@ -4,8 +4,8 @@ import os
 import nltk
 from nltk.corpus import wordnet
 
-from config import DATASETS_DIR, FB15K237_MAPPING_FILE, ORIGINAL, COUNTRIES, YAGO310, FB15K237, WN18RR, CODEXSMALL, \
-    CODEXSMALL_ENTITIES_MAPPING_FILE, CODEXSMALL_RELATIONS_MAPPING_FILE
+from config.config import DATASETS_DIR, ORIGINAL, COUNTRIES, YAGO310, FB15K237, WN18RR, CODEXSMALL, \
+    FB15K237_MAPPING_FILE, CODEXSMALL_ENTITIES_MAPPING_FILE, CODEXSMALL_RELATIONS_MAPPING_FILE
 from dao.dataset_convertion import DatasetConverter
 from dao.dataset_loading import PykeenDatasetLoader
 from dao.dataset_storing import DatasetExporter

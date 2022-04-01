@@ -50,11 +50,26 @@ def get_train_test_validation_2(knowledge_graph_path: str,
 def train(training: TriplesFactory,
           testing: TriplesFactory,
           validation: TriplesFactory,
-          kge_model_obj: "Pykeen KGE model name",
-          num_epochs: int = 5,
-          batch_size: int = 256,
-          stopper: Optional[str] = "early",
-          model_kwargs: Optional[dict] = None) -> PipelineResult:
+          model_name: str,
+          model_kwargs: Optional[dict] = None,
+          training_kwargs: Optional[dict] = None,
+          loss_kwargs: Optional[dict] = None,
+          regularizer_kwargs: Optional[dict] = None,
+          optimizer_kwargs: Optional[dict] = None,
+          negative_sampler_kwargs: Optional[dict] = None,
+          stopper: Optional[str] = None) -> PipelineResult:
+    # manage training kwargs
+    if training_kwargs is None:
+        training_kwargs = {
+            "num_epochs": 100,
+            "batch_size": 128,
+            "use_tqdm_batch": False
+        }
+        batch_size = 128
+    else:
+        training_kwargs["use_tqdm_batch"] = False
+        batch_size = training_kwargs["batch_size"]
+    # training and evaluation
     return pipeline(
         training=training,
         validation=validation,
@@ -62,29 +77,18 @@ def train(training: TriplesFactory,
         dataset_kwargs={
             "create_inverse_triples": False,
         },
-        model=kge_model_obj,
+        model=model_name,
         model_kwargs=model_kwargs,
-        training_kwargs={
-            "num_epochs": num_epochs,
-            "batch_size": batch_size,
-            "use_tqdm_batch": False,
-            # "checkpoint_directory": checkpoint_folder_path,
-            # "checkpoint_name": 'my_checkpoint.pt',
-            # "checkpoint_frequency": 10,
-            # "checkpoint_on_failure": True,
-        },
+        training_kwargs=training_kwargs,
         optimizer='Adam',
+        optimizer_kwargs=optimizer_kwargs,
         clear_optimizer=True,
+        loss_kwargs=loss_kwargs,
+        regularizer_kwargs=regularizer_kwargs,
         training_loop='slcwa',
         negative_sampler='basic',
+        negative_sampler_kwargs=negative_sampler_kwargs,
         stopper=stopper,
-        stopper_kwargs={
-            "frequency": 10,
-            "patience": 2,
-            "metric": 'hits_at_k',
-            "relative_delta": 0.01,
-            "larger_is_better": True,
-        },
         evaluator="RankBasedEvaluator",
         evaluator_kwargs={
             "batch_size": batch_size,
@@ -93,7 +97,6 @@ def train(training: TriplesFactory,
             "use_tqdm": True
         },
         use_testing_data=True,
-        random_seed=1,
         device='gpu',  # 'cpu'
         use_tqdm=True,
     )

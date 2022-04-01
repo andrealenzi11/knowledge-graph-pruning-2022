@@ -4,7 +4,7 @@ from typing import Tuple, Optional
 
 import pandas as pd
 
-from config import HEAD, RELATION, TAIL, FAKE_FLAG, TRAINING, VALIDATION, TESTING
+from config.config import HEAD, RELATION, TAIL, FAKE_FLAG, TRAINING, VALIDATION, TESTING
 from dao.data_model import NoisyDataset
 
 

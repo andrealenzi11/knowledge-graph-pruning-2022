@@ -4,7 +4,7 @@ from typing import Tuple, Union
 import pandas as pd
 from pykeen import datasets
 
-from config import DATASETS_DIR, FAKE_FLAG, \
+from config.config import DATASETS_DIR, FAKE_FLAG, \
     TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
     VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
     TESTING_TSV, TESTING_Y_FAKE_TSV, \

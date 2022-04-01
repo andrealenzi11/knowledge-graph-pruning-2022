@@ -1,6 +1,6 @@
 import pandas as pd
 
-from config import HEAD, RELATION, TAIL
+from config.config import HEAD, RELATION, TAIL
 
 
 def read_kg_tsv(in_path: str,

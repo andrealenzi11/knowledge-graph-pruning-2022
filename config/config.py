@@ -29,6 +29,24 @@ TAIL = "TAIL"
 FAKE_FLAG = "Y_FAKE"
 # ====================================================== #
 
+# ==================== Models Names ==================== #
+RESCAL = "RESCAL"
+TRANSE = "TransE"
+DISTMULT = "DistMult"
+TRANSH = "TransH"
+# TRANSR = "TransR"
+# TRANSD = "TransD"
+COMPLEX = "ComplEx"
+HOLE = "HolE"
+CONVE = "ConvE"
+# CONVKB = "ConvKB"
+# RGCN = "RGCN"
+ROTATE = "RotatE"
+PAIRRE = "PairRE"
+AUTOSF = "AutoSF"
+BOXE = "BoxE"
+# ======================================================== #
+
 # ==================== Datasets Names ==================== #
 FB15K237 = "FB15K237"
 WN18RR = "WN18RR"
@@ -84,6 +102,9 @@ create_non_existent_folder(folder_path=CHECKPOINTS_DIR)
 
 RESULTS_DIR = os.path.join(RESOURCES_DIR, "results")
 create_non_existent_folder(folder_path=RESULTS_DIR)
+
+TUNING_DIR = os.path.join(RESOURCES_DIR, "tuning")
+create_non_existent_folder(folder_path=TUNING_DIR)
 # ======================================================================= #
 
 
@@ -161,6 +182,7 @@ create_non_existent_folders(root_folder_path=CODEXSMALL_MODELS_FOLDER_PATH,
                             sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
 # ================================================== #
 
+
 # ==================== Checkpoints ==================== #
 # fb15k237 sub-folder
 FB15K237_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, FB15K237)
@@ -191,6 +213,29 @@ CODEXSMALL_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, CODEXSMALL)
 create_non_existent_folder(folder_path=CODEXSMALL_CHECKPOINTS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=CODEXSMALL_CHECKPOINTS_FOLDER_PATH,
                             sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+# ===================================================== #
+
+
+# ==================== Tuning ==================== #
+# fb15k237 sub-folder
+FB15K237_TUNING_FOLDER_PATH = os.path.join(TUNING_DIR, FB15K237)
+create_non_existent_folder(folder_path=FB15K237_TUNING_FOLDER_PATH)
+
+# wn18rr sub-folder
+WN18RR_TUNING_FOLDER_PATH = os.path.join(TUNING_DIR, WN18RR)
+create_non_existent_folder(folder_path=WN18RR_TUNING_FOLDER_PATH)
+
+# yago310 sub-folder
+YAGO310_TUNING_FOLDER_PATH = os.path.join(TUNING_DIR, YAGO310)
+create_non_existent_folder(folder_path=YAGO310_TUNING_FOLDER_PATH)
+
+# countries sub-folder
+COUNTRIES_TUNING_FOLDER_PATH = os.path.join(TUNING_DIR, COUNTRIES)
+create_non_existent_folder(folder_path=COUNTRIES_TUNING_FOLDER_PATH)
+
+# CoDExSmall sub-folder
+CODEXSMALL_TUNING_FOLDER_PATH = os.path.join(TUNING_DIR, CODEXSMALL)
+create_non_existent_folder(folder_path=CODEXSMALL_TUNING_FOLDER_PATH)
 # ===================================================== #
 
 

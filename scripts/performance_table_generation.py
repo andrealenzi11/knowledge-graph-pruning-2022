@@ -3,13 +3,13 @@ import os
 
 import pandas as pd
 
-from config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
+from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
     RESULTS_DIR, ORIGINAL, NOISE_5, NOISE_10, NOISE_15, \
     MR, MRR, HITS_AT_1, HITS_AT_3, HITS_AT_5, HITS_AT_10, \
     BOTH_STRATEGY, HEAD_STRATEGY, TAIL_STRATEGY, \
     REALISTIC_STRATEGY, OPTIMISTIC_STRATEGY, PESSIMISTIC_STRATEGY
 
-from core.fabrication import DatasetModelsFolderPathFactory
+from core.fabrication import DatasetPathFactory
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -21,23 +21,24 @@ if __name__ == '__main__':
     force_saving = True
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
-    dataset_name: str = CODEXSMALL
+    dataset_name: str = COUNTRIES
     strategy1: str = BOTH_STRATEGY  # "both" | "head" | "tail"
     strategy2: str = OPTIMISTIC_STRATEGY  # "realistic" | "optimistic" | "pessimistic"
     selected_metrics = {
-        MR,
+        # MR,
         MRR,
-        HITS_AT_1,
-        HITS_AT_3,
-        HITS_AT_5,
-        HITS_AT_10,
+        # HITS_AT_1,
+        # HITS_AT_3,
+        # HITS_AT_5,
+        # HITS_AT_10,
     }
 
     if strategy1 not in {"both", "head", "tail"}:
         raise ValueError(f"Invalid Strategy1 '{strategy1}'!")
     if strategy2 not in {"realistic", "optimistic", "pessimistic"}:
         raise ValueError(f"Invalid Strategy2 '{strategy2}'!")
-    dataset_models_folder_path = DatasetModelsFolderPathFactory().get(dataset_name=dataset_name)
+
+    dataset_models_folder_path = DatasetPathFactory(dataset_name=dataset_name).get_models_folder_path()
 
     all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL}
     all_metrics = {MR, MRR, HITS_AT_1, HITS_AT_3, HITS_AT_5, HITS_AT_10}

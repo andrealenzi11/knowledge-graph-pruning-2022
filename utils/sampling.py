@@ -1,6 +1,6 @@
 import pandas as pd
 
-from config import HEAD, RELATION, TAIL
+from config.config import HEAD, RELATION, TAIL
 
 
 def extract_sample_from_knowledge_graph(in_file_path: str,
