@@ -4,7 +4,7 @@ import os
 import nltk
 from nltk.corpus import wordnet
 
-from config.config import DATASETS_DIR, ORIGINAL, COUNTRIES, YAGO310, FB15K237, WN18RR, CODEXSMALL, \
+from config.config import DATASETS_DIR, ORIGINAL, COUNTRIES, YAGO310, FB15K237, WN18RR, CODEXSMALL, NATIONS, \
     FB15K237_MAPPING_FILE, CODEXSMALL_ENTITIES_MAPPING_FILE, CODEXSMALL_RELATIONS_MAPPING_FILE
 from dao.dataset_convertion import DatasetConverter
 from dao.dataset_loading import PykeenDatasetLoader
@@ -45,6 +45,7 @@ if __name__ == '__main__':
         (FB15K237, freebase_id_2_wikidata_label_map, None),
         (WN18RR, wordnet_offset_2_wordnet_name_map, None),
         (CODEXSMALL, entity_codexsmall_mapping_diz, relations_codexsmall_mapping_diz),
+        (NATIONS, None, None),
     ]:
         print(f"\n\n\n##### {current_dataset_name} #####")
 

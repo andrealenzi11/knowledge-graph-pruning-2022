@@ -1,24 +1,25 @@
 import os
 
-from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
+from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
     create_non_existent_folder, \
     ORIGINAL, NOISE_5, NOISE_10, NOISE_15, \
-    RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
+    RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE, NOISE_20, NOISE_30
 from config.kge_models_config import HYPERPARAMS_CONFIG
-from core.fabrication import DatasetPathFactory
 from core.pykeen_wrapper import get_train_test_validation, train, store, load
-from dao.dataset_loading import TsvDatasetLoader
+from dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
+
 
 if __name__ == '__main__':
 
     # === Set your training configuration === #
-    dataset_name: str = COUNTRIES  # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
+    # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
+    dataset_name: str = NATIONS
     force_training: bool = False
     # num_epochs = 200  # default: 5
     # batch_size = 256  # default: 256
     stopper = None  # "early" | None
 
-    all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL}
+    all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS}
     print(f"all_datasets_names: {all_datasets_names}")
     dataset_models_folder_path = DatasetPathFactory(dataset_name=dataset_name).get_models_folder_path()
 
@@ -34,9 +35,11 @@ if __name__ == '__main__':
 
     for noise_level in [
         ORIGINAL,
-        NOISE_5,
+        # NOISE_5,
         NOISE_10,
         NOISE_15,
+        NOISE_20,
+        NOISE_30,
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
         datasets_loader = TsvDatasetLoader(dataset_name=dataset_name, noise_level=noise_level)

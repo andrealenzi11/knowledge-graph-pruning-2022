@@ -1,4 +1,4 @@
-from config.config import COUNTRIES, CODEXSMALL
+from config.config import COUNTRIES, CODEXSMALL, NATIONS
 
 from config.config import RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
 
@@ -107,13 +107,25 @@ HYPERPARAMS_CONFIG = {
     },
 
     # ========== CoDExSmall Dataset ========== #
-    CODEXSMALL: {
+    NATIONS: {
 
-        RESCAL: {
-
+        RESCAL:  {
+            "model.embedding_dim": 224,
+            "loss.margin": 1.2872050384481426,
+            "regularizer.weight": 0.7655403769033309,
+            "optimizer.lr": 0.007265992846208457,
+            "negative_sampler.num_negs_per_pos": 2,
+            "training.num_epochs": 165,
+            "training.batch_size": 64,
         },
         TRANSE: {
-
+            "model.embedding_dim": 80,
+            "model.scoring_fct_norm": 2,
+            "loss.margin": 1.7300440097610212,
+            "optimizer.lr": 0.00795011583801911,
+            "negative_sampler.num_negs_per_pos": 27,
+            "training.num_epochs": 150,
+            "training.batch_size": 256,
         },
         DISTMULT: {
 

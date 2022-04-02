@@ -53,6 +53,7 @@ WN18RR = "WN18RR"
 YAGO310 = "YAGO310"
 COUNTRIES = "COUNTRIES"
 CODEXSMALL = "CODEXSMALL"
+NATIONS = "NATIONS"
 # ======================================================== #
 
 # ==================== Noise Levels ==================== #
@@ -61,6 +62,11 @@ NOISE_1 = "noise_1"
 NOISE_5 = "noise_5"
 NOISE_10 = "noise_10"
 NOISE_15 = "noise_15"
+NOISE_20 = "noise_20"
+NOISE_25 = "noise_25"
+NOISE_30 = "noise_30"
+
+ALL_NOISE_LEVELS = [ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_25, NOISE_30]
 # ====================================================== #
 
 # ==================== partitions names ==================== #
@@ -71,6 +77,7 @@ TESTING = "testing"
 
 
 # ==================== metrics names and evaluation strategy ==================== #
+# Link Prediction Metrics
 MR = "mr"   # arithmetic_mean_rank
 MRR = "mrr"  # inverse_harmonic_mean_rank
 HITS_AT_1 = "hits_at_1"  # hits_at_K=1
@@ -121,31 +128,37 @@ TESTING_Y_FAKE_TSV = "testing_y_fake.tsv"
 FB15K237_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, FB15K237)
 create_non_existent_folder(folder_path=FB15K237_DATASETS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=FB15K237_DATASETS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # wn18rr sub-folder
 WN18RR_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, WN18RR)
 create_non_existent_folder(folder_path=WN18RR_DATASETS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=WN18RR_DATASETS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # yago310 sub-folder
 YAGO310_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, YAGO310)
 create_non_existent_folder(folder_path=YAGO310_DATASETS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=YAGO310_DATASETS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # countries sub-folder
 COUNTRIES_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, COUNTRIES)
 create_non_existent_folder(folder_path=COUNTRIES_DATASETS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=COUNTRIES_DATASETS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # CoDExSmall sub-folder
 CODEXSMALL_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, CODEXSMALL)
 create_non_existent_folder(folder_path=CODEXSMALL_DATASETS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=CODEXSMALL_DATASETS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
+
+# Nations sub-folder
+NATIONS_DATASETS_FOLDER_PATH = os.path.join(DATASETS_DIR, NATIONS)
+create_non_existent_folder(folder_path=NATIONS_DATASETS_FOLDER_PATH)
+create_non_existent_folders(root_folder_path=NATIONS_DATASETS_FOLDER_PATH,
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 # ================================================== #
 
 
@@ -154,32 +167,38 @@ create_non_existent_folders(root_folder_path=CODEXSMALL_DATASETS_FOLDER_PATH,
 FB15K237_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, FB15K237)
 create_non_existent_folder(folder_path=FB15K237_MODELS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=FB15K237_MODELS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # wn18rr sub-folder
 WN18RR_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, WN18RR)
 create_non_existent_folder(folder_path=WN18RR_MODELS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=WN18RR_MODELS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # yago310 sub-folder
 YAGO310_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, YAGO310)
 create_non_existent_folder(folder_path=YAGO310_MODELS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=YAGO310_MODELS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 
 # countries sub-folder
 COUNTRIES_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, COUNTRIES)
 create_non_existent_folder(folder_path=COUNTRIES_MODELS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=COUNTRIES_MODELS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # CoDExSmall sub-folder
 CODEXSMALL_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, CODEXSMALL)
 create_non_existent_folder(folder_path=CODEXSMALL_MODELS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=CODEXSMALL_MODELS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
+
+# Nations sub-folder
+NATIONS_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, NATIONS)
+create_non_existent_folder(folder_path=NATIONS_MODELS_FOLDER_PATH)
+create_non_existent_folders(root_folder_path=NATIONS_MODELS_FOLDER_PATH,
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 # ================================================== #
 
 
@@ -188,31 +207,37 @@ create_non_existent_folders(root_folder_path=CODEXSMALL_MODELS_FOLDER_PATH,
 FB15K237_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, FB15K237)
 create_non_existent_folder(folder_path=FB15K237_CHECKPOINTS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=FB15K237_CHECKPOINTS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # wn18rr sub-folder
 WN18RR_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, WN18RR)
 create_non_existent_folder(folder_path=WN18RR_CHECKPOINTS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=WN18RR_CHECKPOINTS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # yago310 sub-folder
 YAGO310_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, YAGO310)
 create_non_existent_folder(folder_path=YAGO310_CHECKPOINTS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=YAGO310_CHECKPOINTS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # countries sub-folder
 COUNTRIES_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, COUNTRIES)
 create_non_existent_folder(folder_path=COUNTRIES_CHECKPOINTS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=COUNTRIES_CHECKPOINTS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 
 # CoDExSmall sub-folder
 CODEXSMALL_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, CODEXSMALL)
 create_non_existent_folder(folder_path=CODEXSMALL_CHECKPOINTS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=CODEXSMALL_CHECKPOINTS_FOLDER_PATH,
-                            sub_folders_paths=[ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15])
+                            sub_folders_paths=ALL_NOISE_LEVELS)
+
+# Nations sub-folder
+NATIONS_CHECKPOINTS_FOLDER_PATH = os.path.join(CHECKPOINTS_DIR, NATIONS)
+create_non_existent_folder(folder_path=NATIONS_CHECKPOINTS_FOLDER_PATH)
+create_non_existent_folders(root_folder_path=NATIONS_CHECKPOINTS_FOLDER_PATH,
+                            sub_folders_paths=ALL_NOISE_LEVELS)
 # ===================================================== #
 
 
@@ -236,6 +261,10 @@ create_non_existent_folder(folder_path=COUNTRIES_TUNING_FOLDER_PATH)
 # CoDExSmall sub-folder
 CODEXSMALL_TUNING_FOLDER_PATH = os.path.join(TUNING_DIR, CODEXSMALL)
 create_non_existent_folder(folder_path=CODEXSMALL_TUNING_FOLDER_PATH)
+
+# Nations sub-folder
+NATIONS_TUNING_FOLDER_PATH = os.path.join(TUNING_DIR, NATIONS)
+create_non_existent_folder(folder_path=NATIONS_TUNING_FOLDER_PATH)
 # ===================================================== #
 
 

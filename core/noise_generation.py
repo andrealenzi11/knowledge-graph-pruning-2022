@@ -154,6 +154,7 @@ class DeterministicNoiseGenerator(NoiseGenerator):
                         sampling_with_replacement_flag: bool) -> Tuple[pd.DataFrame, pd.Series]:
         partition_original_size = partition_df.shape[0]
         partition_sample_size = int(math.ceil(partition_original_size / 100 * noise_percentage))
+        assert partition_sample_size < partition_original_size
         print(f"[noise_{noise_percentage}%]  |  "
               f"{partition_name}_sample_size: {partition_sample_size}  | "
               f"{partition_name}_original_size: {partition_original_size}")
@@ -167,6 +168,9 @@ class DeterministicNoiseGenerator(NoiseGenerator):
         tail_sample = partition_df[TAIL].sample(n=partition_sample_size,
                                                 replace=sampling_with_replacement_flag,
                                                 random_state=self.random_state_tail).values
+        assert head_sample.shape[0] == relation_sample.shape[0]
+        assert head_sample.shape[0] == tail_sample.shape[0]
+        assert relation_sample.shape[0] == tail_sample.shape[0]
         partition_anomalies_df = pd.DataFrame(data={HEAD: head_sample,
                                                     RELATION: relation_sample,
                                                     TAIL: tail_sample}).reset_index(drop=True)
@@ -177,24 +181,33 @@ class DeterministicNoiseGenerator(NoiseGenerator):
                                        verify_integrity=True).reset_index(drop=True)
         print(f"\t\t final_df: {partition_final_df.shape}")
         partition_fake_y = [0] * partition_original_size + [1] * partition_sample_size
+        assert len(partition_fake_y) == partition_original_size + partition_sample_size
+        assert partition_final_df.shape[0] == len(partition_fake_y)
         partition_fake_series = pd.Series(data=partition_fake_y,
                                           dtype=int,
                                           name=FAKE_FLAG)
         return partition_final_df, partition_fake_series
 
     def generate_noisy_dataset(self, noise_percentage: int) -> NoisyDataset:
+        # training
         training_final_df, training_y_fake = self._generate_noise(noise_percentage=noise_percentage,
                                                                   partition_name=TRAINING,
                                                                   partition_df=self.training_df,
                                                                   sampling_with_replacement_flag=True)
+        assert training_final_df.shape[0] == training_y_fake.shape[0]
+        # validation
         validation_final_df, validation_y_fake = self._generate_noise(noise_percentage=noise_percentage,
                                                                       partition_name=VALIDATION,
                                                                       partition_df=self.validation_df,
                                                                       sampling_with_replacement_flag=False)
+        assert validation_final_df.shape[0] == validation_y_fake.shape[0]
+        # testing
         testing_final_df, testing_y_fake = self._generate_noise(noise_percentage=noise_percentage,
                                                                 partition_name=TESTING,
                                                                 partition_df=self.testing_df,
                                                                 sampling_with_replacement_flag=False)
+        assert testing_final_df.shape[0] == testing_y_fake.shape[0]
+        # Return the obtained NoisyDataset object
         return NoisyDataset(training_df=training_final_df,
                             training_y_fake=training_y_fake,
                             validation_df=validation_final_df,

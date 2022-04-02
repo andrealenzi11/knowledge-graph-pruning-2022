@@ -7,9 +7,8 @@ from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
     RESULTS_DIR, ORIGINAL, NOISE_5, NOISE_10, NOISE_15, \
     MR, MRR, HITS_AT_1, HITS_AT_3, HITS_AT_5, HITS_AT_10, \
     BOTH_STRATEGY, HEAD_STRATEGY, TAIL_STRATEGY, \
-    REALISTIC_STRATEGY, OPTIMISTIC_STRATEGY, PESSIMISTIC_STRATEGY
-
-from core.fabrication import DatasetPathFactory
+    REALISTIC_STRATEGY, OPTIMISTIC_STRATEGY, PESSIMISTIC_STRATEGY, NOISE_20, NOISE_30, NATIONS
+from dao.dataset_loading import DatasetPathFactory
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -21,9 +20,9 @@ if __name__ == '__main__':
     force_saving = True
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
-    dataset_name: str = COUNTRIES
+    dataset_name: str = NATIONS
     strategy1: str = BOTH_STRATEGY  # "both" | "head" | "tail"
-    strategy2: str = OPTIMISTIC_STRATEGY  # "realistic" | "optimistic" | "pessimistic"
+    strategy2: str = REALISTIC_STRATEGY  # "realistic" | "optimistic" | "pessimistic"
     selected_metrics = {
         # MR,
         MRR,
@@ -63,6 +62,8 @@ if __name__ == '__main__':
         NOISE_5,
         NOISE_10,
         NOISE_15,
+        NOISE_20,
+        NOISE_30,
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
         in_folder_path = os.path.join(dataset_models_folder_path, noise_level)
