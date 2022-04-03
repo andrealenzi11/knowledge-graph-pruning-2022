@@ -152,13 +152,30 @@ class DeterministicNoiseGenerator(NoiseGenerator):
                         partition_name: str,
                         partition_df: pd.DataFrame,
                         sampling_with_replacement_flag: bool) -> Tuple[pd.DataFrame, pd.Series]:
+        """
+        Generate a nosy dataframe;
+
+        :param noise_percentage: (*int*) percentage number [0, 100]
+        :param partition_name: (*str*) "training" | "validation" | "testing"
+        :param partition_df: (*pd.DataFrame*) input dataframe with triples from which generate noise
+        :param sampling_with_replacement_flag: (*bool*) boolean flag that indicate the sampling strategy.
+                - True ==> the same element x could be sampled more times (es. from [1,2,3,4,5] we can sample 2,2,5,5)
+                - False ==> once sampled an element x, we never resample x (es. from [1,2,3,4,5] we can sample 2,3,5,1)
+
+        :return: (noisy dataframe, boolean fake series)
+        """
+
+        # Compute anomaly df size
         partition_original_size = partition_df.shape[0]
         partition_sample_size = int(math.ceil(partition_original_size / 100 * noise_percentage))
         assert partition_sample_size < partition_original_size
         print(f"[noise_{noise_percentage}%]  |  "
               f"{partition_name}_sample_size: {partition_sample_size}  | "
               f"{partition_name}_original_size: {partition_original_size}")
+
         print(f"\t\t original_df: {partition_df.shape}")
+
+        # Create anomaly df, by sampling from original df
         head_sample = partition_df[HEAD].sample(n=partition_sample_size,
                                                 replace=sampling_with_replacement_flag,
                                                 random_state=self.random_state_head).values
@@ -168,13 +185,19 @@ class DeterministicNoiseGenerator(NoiseGenerator):
         tail_sample = partition_df[TAIL].sample(n=partition_sample_size,
                                                 replace=sampling_with_replacement_flag,
                                                 random_state=self.random_state_tail).values
-        assert head_sample.shape[0] == relation_sample.shape[0]
-        assert head_sample.shape[0] == tail_sample.shape[0]
-        assert relation_sample.shape[0] == tail_sample.shape[0]
         partition_anomalies_df = pd.DataFrame(data={HEAD: head_sample,
                                                     RELATION: relation_sample,
                                                     TAIL: tail_sample}).reset_index(drop=True)
         print(f"\t\t anomalies_df: {partition_anomalies_df.shape}")
+        assert head_sample.shape[0] == relation_sample.shape[0]
+        assert head_sample.shape[0] == tail_sample.shape[0]
+        assert relation_sample.shape[0] == tail_sample.shape[0]
+        assert partition_anomalies_df.shape[0] == \
+               head_sample.shape[0] == relation_sample.shape[0] == tail_sample.shape[0]
+        assert partition_anomalies_df.shape[1] == 3
+        assert partition_anomalies_df.shape[0] < partition_df.shape[0]
+
+        # Append anomaly df to the original df
         partition_final_df = pd.concat([partition_df, partition_anomalies_df],
                                        axis=0,
                                        ignore_index=True,
@@ -195,18 +218,21 @@ class DeterministicNoiseGenerator(NoiseGenerator):
                                                                   partition_df=self.training_df,
                                                                   sampling_with_replacement_flag=True)
         assert training_final_df.shape[0] == training_y_fake.shape[0]
+        assert training_final_df.shape[1] == 3
         # validation
         validation_final_df, validation_y_fake = self._generate_noise(noise_percentage=noise_percentage,
                                                                       partition_name=VALIDATION,
                                                                       partition_df=self.validation_df,
                                                                       sampling_with_replacement_flag=False)
         assert validation_final_df.shape[0] == validation_y_fake.shape[0]
+        assert validation_final_df.shape[1] == 3
         # testing
         testing_final_df, testing_y_fake = self._generate_noise(noise_percentage=noise_percentage,
                                                                 partition_name=TESTING,
                                                                 partition_df=self.testing_df,
                                                                 sampling_with_replacement_flag=False)
         assert testing_final_df.shape[0] == testing_y_fake.shape[0]
+        assert testing_final_df.shape[1] == 3
         # Return the obtained NoisyDataset object
         return NoisyDataset(training_df=training_final_df,
                             training_y_fake=training_y_fake,

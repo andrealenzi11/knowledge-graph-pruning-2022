@@ -127,40 +127,54 @@ class TsvDatasetLoader(BaseDatasetLoader):
                                                       self.dataset_name,
                                                       self.noise_level,
                                                       TRAINING_TSV)
+        assert "training" in self.in_path_noisy_df_training
         self.in_path_original_df_training = os.path.join(DATASETS_DIR,
                                                          self.dataset_name,
                                                          ORIGINAL,
                                                          TRAINING_TSV)
+        assert "training" in self.in_path_original_df_training
+        assert "original" in self.in_path_original_df_training
         self.in_path_y_fake_training = os.path.join(DATASETS_DIR,
                                                     self.dataset_name,
                                                     self.noise_level,
                                                     TRAINING_Y_FAKE_TSV)
+        assert "training" in self.in_path_y_fake_training
+
         # ============ validation ============ #
         self.in_path_noisy_df_validation = os.path.join(DATASETS_DIR,
                                                         self.dataset_name,
                                                         self.noise_level,
                                                         VALIDATION_TSV)
+        assert "validation" in self.in_path_noisy_df_validation
         self.in_path_original_df_validation = os.path.join(DATASETS_DIR,
                                                            self.dataset_name,
                                                            ORIGINAL,
                                                            VALIDATION_TSV)
+        assert "validation" in self.in_path_original_df_validation
+        assert "original" in self.in_path_original_df_validation
         self.in_path_y_fake_validation = os.path.join(DATASETS_DIR,
                                                       self.dataset_name,
                                                       self.noise_level,
                                                       VALIDATION_Y_FAKE_TSV)
+        assert "validation" in self.in_path_y_fake_validation
+
         # ============= testing ============= #
         self.in_path_noisy_df_testing = os.path.join(DATASETS_DIR,
                                                      self.dataset_name,
                                                      self.noise_level,
                                                      TESTING_TSV)
+        assert "testing" in self.in_path_noisy_df_testing
         self.in_path_original_df_testing = os.path.join(DATASETS_DIR,
                                                         self.dataset_name,
                                                         ORIGINAL,
                                                         TESTING_TSV)
+        assert "testing" in self.in_path_original_df_testing
+        assert "original" in self.in_path_original_df_testing
         self.in_path_y_fake_testing = os.path.join(DATASETS_DIR,
                                                    self.dataset_name,
                                                    self.noise_level,
                                                    TESTING_Y_FAKE_TSV)
+        assert "testing" in self.in_path_y_fake_testing
 
     def get_training_validation_testing_dfs_paths(self, noisy_test_flag: bool) -> Tuple[str, str, str]:
         if noisy_test_flag:
@@ -171,12 +185,20 @@ class TsvDatasetLoader(BaseDatasetLoader):
     def get_training_validation_testing_dfs(self, noisy_test_flag: bool) -> Tuple[pd.DataFrame,
                                                                                   pd.DataFrame,
                                                                                   pd.DataFrame]:
+        # training
+        print(f"\t\t\t training_path: {self.in_path_noisy_df_training}")
         training_df = pd.read_csv(filepath_or_buffer=self.in_path_noisy_df_training, sep="\t", encoding="utf-8")
+        # validation
+        print(f"\t\t\t validation_path: {self.in_path_noisy_df_validation}")
         validation_df = pd.read_csv(filepath_or_buffer=self.in_path_noisy_df_validation, sep="\t", encoding="utf-8")
+        # testing
         if noisy_test_flag:
+            print(f"\t\t\t testing_path: {self.in_path_noisy_df_testing}")
             testing_df = pd.read_csv(filepath_or_buffer=self.in_path_noisy_df_testing, sep="\t", encoding="utf-8")
         else:
+            print(f"\t\t\t testing_path: {self.in_path_original_df_testing}")
             testing_df = pd.read_csv(filepath_or_buffer=self.in_path_original_df_testing, sep="\t", encoding="utf-8")
+        # return the 3 dfs
         return training_df, validation_df, testing_df
 
     def get_training_validation_testing_y_fakes(self) -> Union[Tuple[pd.Series, pd.Series, pd.Series], None]:

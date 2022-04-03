@@ -63,4 +63,4 @@ class DatasetConverter:
 
     @staticmethod
     def _preprocess_entity(text: str) -> str:
-        return re.sub(r"\s+", " ", text).lower().strip().replace(" ", "_")
+        return re.sub(r"\s+", " ", text).lower().strip().replace(" ", "_").strip()

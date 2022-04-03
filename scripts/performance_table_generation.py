@@ -20,7 +20,7 @@ if __name__ == '__main__':
     force_saving = True
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
-    dataset_name: str = NATIONS
+    dataset_name: str = CODEXSMALL
     strategy1: str = BOTH_STRATEGY  # "both" | "head" | "tail"
     strategy2: str = REALISTIC_STRATEGY  # "realistic" | "optimistic" | "pessimistic"
     selected_metrics = {

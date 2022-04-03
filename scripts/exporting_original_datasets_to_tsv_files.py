@@ -10,6 +10,7 @@ from dao.dataset_convertion import DatasetConverter
 from dao.dataset_loading import PykeenDatasetLoader
 from dao.dataset_storing import DatasetExporter
 
+
 if __name__ == '__main__':
 
     try:
@@ -53,6 +54,7 @@ if __name__ == '__main__':
             print(f"\t\t - 'entities_id_label_map' size: {len(entities_id_label_map)}")
         else:
             print("\t\t - 'entities_id_label_map' is None")
+
         if relations_id_label_map:
             print(f"\t\t - 'relations_id_label_map' size: {len(relations_id_label_map)}")
         else:

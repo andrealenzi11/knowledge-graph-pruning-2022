@@ -49,7 +49,7 @@ def get_train_test_validation_2(knowledge_graph_path: str,
 
 def train(training: TriplesFactory,
           testing: TriplesFactory,
-          validation: TriplesFactory,
+          validation: Optional[TriplesFactory],
           model_name: str,
           model_kwargs: Optional[dict] = None,
           training_kwargs: Optional[dict] = None,
@@ -99,6 +99,8 @@ def train(training: TriplesFactory,
         use_testing_data=True,
         device='gpu',  # 'cpu'
         use_tqdm=True,
+        evaluation_fallback=True,
+        filter_validation_when_testing=False,
     )
 
 

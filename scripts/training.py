@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     # === Set your training configuration === #
     # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
-    dataset_name: str = NATIONS
+    dataset_name: str = CODEXSMALL
     force_training: bool = False
     # num_epochs = 200  # default: 5
     # batch_size = 256  # default: 256
@@ -127,7 +127,7 @@ if __name__ == '__main__':
                 pipeline_result = train(
                     training=training,
                     testing=testing,
-                    validation=validation,
+                    validation=None,
                     model_name=model_name,
                     model_kwargs=kwargs_diz["model"],
                     training_kwargs=kwargs_diz["training"],

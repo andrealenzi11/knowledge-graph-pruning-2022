@@ -31,15 +31,20 @@ if __name__ == '__main__':
         tsv_dataset_loader = TsvDatasetLoader(dataset_name=dataset_name,
                                               noise_level=ORIGINAL)
 
-        print(tsv_dataset_loader.in_path_noisy_df_training)
-        print(tsv_dataset_loader.in_path_noisy_df_validation)
-        print(tsv_dataset_loader.in_path_noisy_df_testing)
+        print(f"\n >>> Original Dataset '{dataset_name}' Info:")
 
+        assert "training" in tsv_dataset_loader.in_path_noisy_df_training.lower()
+        assert "validation" in tsv_dataset_loader.in_path_noisy_df_validation.lower()
+        assert "testing" in tsv_dataset_loader.in_path_noisy_df_testing.lower()
+
+        print(" - Paths:")
         df_training, df_validation, df_testing = \
             tsv_dataset_loader.get_training_validation_testing_dfs(noisy_test_flag=False)
-        print(f"training_shape={df_training.shape} \n"
-              f"validation_shape={df_validation.shape} \n"
-              f"testing_shape={df_testing.shape} \n")
+
+        print(" - Shapes:")
+        print(f"\t\t\t training_shape={df_training.shape} \n"
+              f"\t\t\t validation_shape={df_validation.shape} \n"
+              f"\t\t\t testing_shape={df_testing.shape} \n")
 
         noise_generator = DeterministicNoiseGenerator(training_df=df_training,
                                                       validation_df=df_validation,
@@ -58,12 +63,16 @@ if __name__ == '__main__':
         ]:
             print(f"\n{'-' * 80}")
             print(f"{noise_percentage_num}  |  {noise_percentage_folder}")
+            assert str(noise_percentage_num) in noise_percentage_folder
 
             noisy_dataset = noise_generator.generate_noisy_dataset(noise_percentage=noise_percentage_num)
 
             print(f"\n ### NOISY TRAINING ({noise_percentage_num}%) ###")
             print(noisy_dataset.training_df.shape)
             print(len(noisy_dataset.training_y_fake))
+            assert noisy_dataset.training_df.shape[0] == len(noisy_dataset.training_y_fake)
+            assert noisy_dataset.training_df.shape[0] > df_training.shape[0]
+            assert len(noisy_dataset.training_y_fake) > df_training.shape[0]
             noisy_dataset.training_df.to_csv(
                 path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, TRAINING_TSV),
                 sep="\t", header=True, index=False, encoding="utf-8"
@@ -76,6 +85,9 @@ if __name__ == '__main__':
             print(f"\n ### NOISY VALIDATION ({noise_percentage_num}%) ###")
             print(noisy_dataset.validation_df.shape)
             print(len(noisy_dataset.validation_y_fake))
+            assert noisy_dataset.validation_df.shape[0] == len(noisy_dataset.validation_y_fake)
+            assert noisy_dataset.validation_df.shape[0] > df_validation.shape[0]
+            assert len(noisy_dataset.validation_y_fake) > df_validation.shape[0]
             noisy_dataset.validation_df.to_csv(
                 path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, VALIDATION_TSV),
                 sep="\t", header=True, index=False, encoding="utf-8"
@@ -88,6 +100,9 @@ if __name__ == '__main__':
             print(f"\n ### NOISY TESTING ({noise_percentage_num}%) ###")
             print(noisy_dataset.testing_df.shape)
             print(len(noisy_dataset.testing_y_fake))
+            assert noisy_dataset.testing_df.shape[0] == len(noisy_dataset.testing_y_fake)
+            assert noisy_dataset.testing_df.shape[0] > df_testing.shape[0]
+            assert len(noisy_dataset.testing_y_fake) > df_testing.shape[0]
             noisy_dataset.testing_df.to_csv(
                 path_or_buf=os.path.join(dataset_folder, noise_percentage_folder, TESTING_TSV),
                 sep="\t", header=True, index=False, encoding="utf-8"
