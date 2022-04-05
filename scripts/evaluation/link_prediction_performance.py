@@ -19,8 +19,8 @@ if __name__ == '__main__':
 
     force_saving = True
 
-    # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL
-    dataset_name: str = CODEXSMALL
+    # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
+    dataset_name: str = COUNTRIES
     strategy1: str = BOTH_STRATEGY  # "both" | "head" | "tail"
     strategy2: str = REALISTIC_STRATEGY  # "realistic" | "optimistic" | "pessimistic"
     selected_metrics = {
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     dataset_models_folder_path = DatasetPathFactory(dataset_name=dataset_name).get_models_folder_path()
 
-    all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL}
+    all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS}
     all_metrics = {MR, MRR, HITS_AT_1, HITS_AT_3, HITS_AT_5, HITS_AT_10}
     all_strategies_1 = {BOTH_STRATEGY, HEAD_STRATEGY, TAIL_STRATEGY}
     all_strategies_2 = {REALISTIC_STRATEGY, OPTIMISTIC_STRATEGY, PESSIMISTIC_STRATEGY}
@@ -59,9 +59,9 @@ if __name__ == '__main__':
     records = {}
     for noise_level in [
         ORIGINAL,
-        NOISE_5,
+        # NOISE_5,
         NOISE_10,
-        NOISE_15,
+        # NOISE_15,
         NOISE_20,
         NOISE_30,
     ]:

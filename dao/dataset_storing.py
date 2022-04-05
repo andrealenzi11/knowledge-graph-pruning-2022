@@ -22,15 +22,15 @@ class DatasetExporter:
 
     def _store_training(self):
         self.training_df.to_csv(path_or_buf=os.path.join(self.output_folder, TRAINING_TSV),
-                                sep="\t", header=True, index=False, encoding="utf-8")
+                                sep="\t", header=False, index=False, encoding="utf-8")
 
     def _store_validation(self):
         self.validation_df.to_csv(path_or_buf=os.path.join(self.output_folder, VALIDATION_TSV),
-                                  sep="\t", header=True, index=False, encoding="utf-8")
+                                  sep="\t", header=False, index=False, encoding="utf-8")
 
     def _store_testing(self):
         self.testing_df.to_csv(path_or_buf=os.path.join(self.output_folder, TESTING_TSV),
-                               sep="\t", header=True, index=False, encoding="utf-8")
+                               sep="\t", header=False, index=False, encoding="utf-8")
 
     def store_to_file_system(self):
         self._store_training()

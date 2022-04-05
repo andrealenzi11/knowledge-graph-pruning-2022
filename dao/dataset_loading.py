@@ -14,7 +14,7 @@ from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATI
     TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
     VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
     TESTING_TSV, TESTING_Y_FAKE_TSV, \
-    ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_30
+    ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_30, HEAD, RELATION, TAIL
 
 
 class BaseDatasetLoader(ABC):
@@ -187,17 +187,21 @@ class TsvDatasetLoader(BaseDatasetLoader):
                                                                                   pd.DataFrame]:
         # training
         print(f"\t\t\t training_path: {self.in_path_noisy_df_training}")
-        training_df = pd.read_csv(filepath_or_buffer=self.in_path_noisy_df_training, sep="\t", encoding="utf-8")
+        training_df = pd.read_csv(filepath_or_buffer=self.in_path_noisy_df_training,
+                                  sep="\t", encoding="utf-8", names=[HEAD, RELATION, TAIL], header=None)
         # validation
         print(f"\t\t\t validation_path: {self.in_path_noisy_df_validation}")
-        validation_df = pd.read_csv(filepath_or_buffer=self.in_path_noisy_df_validation, sep="\t", encoding="utf-8")
+        validation_df = pd.read_csv(filepath_or_buffer=self.in_path_noisy_df_validation,
+                                    sep="\t", encoding="utf-8", names=[HEAD, RELATION, TAIL], header=None)
         # testing
         if noisy_test_flag:
             print(f"\t\t\t testing_path: {self.in_path_noisy_df_testing}")
-            testing_df = pd.read_csv(filepath_or_buffer=self.in_path_noisy_df_testing, sep="\t", encoding="utf-8")
+            testing_df = pd.read_csv(filepath_or_buffer=self.in_path_noisy_df_testing,
+                                     sep="\t", encoding="utf-8", names=[HEAD, RELATION, TAIL], header=None)
         else:
             print(f"\t\t\t testing_path: {self.in_path_original_df_testing}")
-            testing_df = pd.read_csv(filepath_or_buffer=self.in_path_original_df_testing, sep="\t", encoding="utf-8")
+            testing_df = pd.read_csv(filepath_or_buffer=self.in_path_original_df_testing,
+                                     sep="\t", encoding="utf-8", names=[HEAD, RELATION, TAIL], header=None)
         # return the 3 dfs
         return training_df, validation_df, testing_df
 
@@ -205,11 +209,11 @@ class TsvDatasetLoader(BaseDatasetLoader):
         if self.noise_level == ORIGINAL:
             return None
         training_y_fake = pd.read_csv(filepath_or_buffer=self.in_path_y_fake_training,
-                                      sep="\t", encoding="utf-8")[FAKE_FLAG]
+                                      sep="\t", encoding="utf-8", names=[FAKE_FLAG], header=None)[FAKE_FLAG]
         validation_y_fake = pd.read_csv(filepath_or_buffer=self.in_path_y_fake_validation,
-                                        sep="\t", encoding="utf-8")[FAKE_FLAG]
+                                        sep="\t", encoding="utf-8", names=[FAKE_FLAG], header=None)[FAKE_FLAG]
         testing_y_fake = pd.read_csv(filepath_or_buffer=self.in_path_y_fake_testing,
-                                     sep="\t", encoding="utf-8")[FAKE_FLAG]
+                                     sep="\t", encoding="utf-8", names=[FAKE_FLAG], header=None)[FAKE_FLAG]
         return training_y_fake, validation_y_fake, testing_y_fake
 
     def get_training_validation_testing_y_fakes_paths(self) -> Union[Tuple[str, str, str], None]:

@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 import torch
-from pykeen.models.predict import predict_triples_df
+from pykeen.models.predict import predict_triples_df, get_all_prediction_df
 
 from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
     RESULTS_DIR, ORIGINAL, NOISE_5, NOISE_10, NOISE_15, \
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     force_saving = True
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
-    dataset_name: str = NATIONS
+    dataset_name: str = COUNTRIES
 
     selected_metrics = {
         PRECISION_NEG,
@@ -56,21 +56,42 @@ if __name__ == '__main__':
     print(f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
     print(f"{'*' * 80}\n\n")
 
+    datasets_loader_30 = TsvDatasetLoader(dataset_name=dataset_name, noise_level=NOISE_30)
+    training_30_path, validation_30_path, testing_30_path = \
+        datasets_loader_30.get_training_validation_testing_dfs_paths(noisy_test_flag=True)
+    training_30, testing_30, validation_30 = get_train_test_validation(training_set_path=training_30_path,
+                                                                       test_set_path=testing_30_path,
+                                                                       validation_set_path=validation_30_path,
+                                                                       create_inverse_triples=False)
+    training_df, validation_df, testing_df = \
+        datasets_loader_30.get_training_validation_testing_dfs(noisy_test_flag=True)
+    testing_30_records = testing_df.to_dict(orient="split")["data"]
+
+    print(testing_30)
+    print(len(testing_30.triples))
+    print(testing_30.triples)
+    print(testing_30.num_triples)
+    print(testing_30.num_entities, testing_30.num_relations)
+    print(testing_30.mapped_triples)
+    # print(testing_30.to_dict(orient="split")["data"])
+    # records_test_30 = testing_30.to_dict(orient="split")["data"]
+    # print(len(records_test_30))
+
     records = {}
     for noise_level in [
         ORIGINAL,
-        NOISE_5,
-        NOISE_10,
-        NOISE_15,
-        NOISE_20,
-        NOISE_30,
+        # NOISE_5,
+        # NOISE_10,
+        # NOISE_15,
+        # NOISE_20,
+        # NOISE_30,
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
         in_folder_path = os.path.join(dataset_models_folder_path, noise_level)
 
         datasets_loader = TsvDatasetLoader(dataset_name=dataset_name, noise_level=noise_level)
         training_path, validation_path, testing_path = \
-            datasets_loader.get_training_validation_testing_dfs_paths(noisy_test_flag=False)
+            datasets_loader.get_training_validation_testing_dfs_paths(noisy_test_flag=True)
 
         training, testing, validation = get_train_test_validation(training_set_path=training_path,
                                                                   test_set_path=testing_path,
@@ -83,30 +104,49 @@ if __name__ == '__main__':
 
             in_file = os.path.join(in_folder_path, model_name, "trained_model.pkl")
 
-            if model_name in ["RESCAL", "ComplEx"]:
-                continue
-
             # if model wa not already trained, skip to the next iteration
             if not os.path.isfile(in_file):
                 continue
 
             # Load model from FS
             my_pykeen_model = torch.load(in_file)
-            res = predict_triples_df(
-                model=my_pykeen_model,
-                triples=[
-                    ("brazil", "embassy", "uk"),
-                    ("cuba", "independence", "usa"),
-                    ("indonesia", "militaryalliance", "usa"),
-                    ("usa", "intergovorgs", "usa"),
-                    ("jordan", "embassy", "brazil"),
-                    ("uk", "relexports", "uk"),
-                ],
-                triples_factory=testing,
-                batch_size=1,
-                mode="testing",
-            )
-            print(res)
+            try:
+                res = predict_triples_df(
+                    model=my_pykeen_model,
+                    # triples=[
+                    #     ("brazil", "embassy", "uk"),
+                    #     ("cuba", "independence", "usa"),
+                    #     ("indonesia", "militaryalliance", "usa"),
+                    #     ("usa", "intergovorgs", "usa"),
+                    #     ("jordan", "embassy", "brazil"),
+                    #     ("uk", "relexports", "uk"),
+                    # ],
+                    triples=testing_30_records,
+                    triples_factory=testing_30,
+                    batch_size=None,
+                    mode=None,  # "testing",
+                )
+                print(res)
+
+                # pred_df = get_all_prediction_df(
+                #     model=my_pykeen_model,
+                #     triples_factory=testing,
+                #     k=1,
+                #     batch_size=1,
+                #     return_tensors=False,
+                #     add_novelties=False,
+                #     remove_known=False,
+                #     testing=testing.mapped_triples,
+                #     mode="testing",
+                # )
+                # print(pred_df)
+
+            except NotImplementedError:
+                print(f"{model_name} not implemented!")
+
+                res2 = my_pykeen_model.score_hrt(hrt_batch=testing_30.mapped_triples, mode=None)
+                print(res2)
+
             print("\n")
 
     #         print(results_diz["metrics"])

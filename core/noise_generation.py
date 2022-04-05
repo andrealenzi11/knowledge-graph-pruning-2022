@@ -140,12 +140,37 @@ class DeterministicNoiseGenerator(NoiseGenerator):
         super().__init__(training_df=training_df,
                          validation_df=validation_df,
                          testing_df=testing_df)
+
         assert random_state_head != random_state_relation
         assert random_state_head != random_state_tail
         assert random_state_relation != random_state_tail
         self.random_state_head = random_state_head
         self.random_state_relation = random_state_relation
         self.random_state_tail = random_state_tail
+        self.all_df = pd.concat(objs=[self.training_df, self.validation_df, self.testing_df],
+                                axis=0,
+                                join="outer",
+                                ignore_index=True,
+                                keys=None,
+                                levels=None,
+                                names=None,
+                                verify_integrity=True,
+                                sort=False,
+                                copy=True).astype("str").reset_index(drop=True)
+        assert (self.all_df.shape[1] == 3) and \
+            (self.all_df.shape[0] == self.training_df.shape[0] + self.validation_df.shape[0] + self.testing_df.shape[0])
+        self.all_df = self.all_df.sort_values(by=[HEAD, RELATION, TAIL],
+                                              axis=0,
+                                              ascending=True,
+                                              inplace=False,
+                                              ignore_index=True).astype("str").reset_index(drop=True)
+        print(f"\t all_df shape: {self.all_df.shape}")
+        self.all_df = self.all_df.drop_duplicates(keep="first",
+                                                  inplace=False,
+                                                  ignore_index=True).astype("str").reset_index(drop=True)
+        print(f"\t all_df shape after drop duplicates: {self.all_df.shape}")
+        assert (self.all_df.shape[1] == 3) and \
+            (self.all_df.shape[0] <= self.training_df.shape[0] + self.validation_df.shape[0] + self.testing_df.shape[0])
 
     def _generate_noise(self,
                         noise_percentage: int,
@@ -176,15 +201,15 @@ class DeterministicNoiseGenerator(NoiseGenerator):
         print(f"\t\t original_df: {partition_df.shape}")
 
         # Create anomaly df, by sampling from original df
-        head_sample = partition_df[HEAD].sample(n=partition_sample_size,
-                                                replace=sampling_with_replacement_flag,
-                                                random_state=self.random_state_head).values
-        relation_sample = partition_df[RELATION].sample(n=partition_sample_size,
-                                                        replace=sampling_with_replacement_flag,
-                                                        random_state=self.random_state_relation).values
-        tail_sample = partition_df[TAIL].sample(n=partition_sample_size,
-                                                replace=sampling_with_replacement_flag,
-                                                random_state=self.random_state_tail).values
+        head_sample = self.all_df[HEAD].sample(n=partition_sample_size,
+                                               replace=sampling_with_replacement_flag,
+                                               random_state=self.random_state_head).values
+        relation_sample = self.all_df[RELATION].sample(n=partition_sample_size,
+                                                       replace=sampling_with_replacement_flag,
+                                                       random_state=self.random_state_relation).values
+        tail_sample = self.all_df[TAIL].sample(n=partition_sample_size,
+                                               replace=sampling_with_replacement_flag,
+                                               random_state=self.random_state_tail).values
         partition_anomalies_df = pd.DataFrame(data={HEAD: head_sample,
                                                     RELATION: relation_sample,
                                                     TAIL: tail_sample}).reset_index(drop=True)
