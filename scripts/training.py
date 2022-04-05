@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     # === Set your training configuration === #
     # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
-    dataset_name: str = CODEXSMALL
+    dataset_name: str = NATIONS
     force_training: bool = False
     # num_epochs = 200  # default: 5
     # batch_size = 256  # default: 256
