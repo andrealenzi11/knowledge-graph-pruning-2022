@@ -1,13 +1,12 @@
 import os
 
+import numpy as np
 import pandas as pd
 import torch
-from pykeen.models.predict import predict_triples_df, get_all_prediction_df
+from pykeen.models.predict import predict_triples_df
 
-from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
-    RESULTS_DIR, ORIGINAL, NOISE_5, NOISE_10, NOISE_15, \
-    MR, MRR, HITS_AT_1, HITS_AT_3, HITS_AT_5, HITS_AT_10, \
-    NOISE_20, NOISE_30, NATIONS
+from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
+    ORIGINAL, NOISE_30
 from core.pykeen_wrapper import get_train_test_validation
 from dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 
@@ -56,6 +55,7 @@ if __name__ == '__main__':
     print(f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
     print(f"{'*' * 80}\n\n")
 
+    # noisy 30
     datasets_loader_30 = TsvDatasetLoader(dataset_name=dataset_name, noise_level=NOISE_30)
     training_30_path, validation_30_path, testing_30_path = \
         datasets_loader_30.get_training_validation_testing_dfs_paths(noisy_test_flag=True)
@@ -63,19 +63,21 @@ if __name__ == '__main__':
                                                                        test_set_path=testing_30_path,
                                                                        validation_set_path=validation_30_path,
                                                                        create_inverse_triples=False)
-    training_df, validation_df, testing_df = \
+    training_30_df, validation_30_df, testing_30_df = \
         datasets_loader_30.get_training_validation_testing_dfs(noisy_test_flag=True)
-    testing_30_records = testing_df.to_dict(orient="split")["data"]
+    training_30_y_fake, validation_30_y_fake, testing_30_y_fake = \
+        datasets_loader_30.get_training_validation_testing_y_fakes()
+    testing_30_records = testing_30_df.to_dict(orient="split")["data"]
 
-    print(testing_30)
-    print(len(testing_30.triples))
-    print(testing_30.triples)
-    print(testing_30.num_triples)
-    print(testing_30.num_entities, testing_30.num_relations)
-    print(testing_30.mapped_triples)
-    # print(testing_30.to_dict(orient="split")["data"])
-    # records_test_30 = testing_30.to_dict(orient="split")["data"]
-    # print(len(records_test_30))
+    # original
+    datasets_loader_original = TsvDatasetLoader(dataset_name=dataset_name, noise_level=ORIGINAL)
+    training_original_path, validation_original_path, testing_original_path = \
+        datasets_loader_original.get_training_validation_testing_dfs_paths(noisy_test_flag=False)
+    training_original, testing_original, validation_original = \
+        get_train_test_validation(training_set_path=training_original_path,
+                                  test_set_path=testing_original_path,
+                                  validation_set_path=validation_original_path,
+                                  create_inverse_triples=False)
 
     records = {}
     for noise_level in [
@@ -100,52 +102,86 @@ if __name__ == '__main__':
 
         for model_name in sorted(os.listdir(in_folder_path)):
 
-            print(model_name, "\n")
-
+            print(model_name)
             in_file = os.path.join(in_folder_path, model_name, "trained_model.pkl")
+            print(in_file)
 
             # if model wa not already trained, skip to the next iteration
             if not os.path.isfile(in_file):
+                print("model not present! \n")
                 continue
 
             # Load model from FS
             my_pykeen_model = torch.load(in_file)
+
+            # Compute KGE scores on training set
             try:
-                res = predict_triples_df(
-                    model=my_pykeen_model,
-                    # triples=[
-                    #     ("brazil", "embassy", "uk"),
-                    #     ("cuba", "independence", "usa"),
-                    #     ("indonesia", "militaryalliance", "usa"),
-                    #     ("usa", "intergovorgs", "usa"),
-                    #     ("jordan", "embassy", "brazil"),
-                    #     ("uk", "relexports", "uk"),
-                    # ],
-                    triples=testing_30_records,
-                    triples_factory=testing_30,
-                    batch_size=None,
-                    mode=None,  # "testing",
-                )
-                print(res)
+                training_scores_tensor = my_pykeen_model.score_hrt(hrt_batch=training_original.mapped_triples,
+                                                                   mode="training")
+            except Exception:
+                training_scores_tensor = my_pykeen_model.score_hrt(hrt_batch=training_original.mapped_triples,
+                                                                   mode=None)
+            training_scores_vector = training_scores_tensor.cpu().detach().numpy().reshape(-1)
+            print("training scores:",
+                  f"shape={training_scores_vector.shape}",
+                  np.min(a=training_scores_vector),
+                  np.percentile(a=training_scores_vector, q=2),
+                  np.percentile(a=training_scores_vector, q=5),
+                  np.percentile(a=training_scores_vector, q=10),
+                  np.median(a=training_scores_vector),
+                  np.percentile(a=training_scores_vector, q=90),
+                  np.percentile(a=training_scores_vector, q=95),
+                  np.percentile(a=training_scores_vector, q=98),
+                  np.max(a=training_scores_vector))
 
-                # pred_df = get_all_prediction_df(
-                #     model=my_pykeen_model,
-                #     triples_factory=testing,
-                #     k=1,
-                #     batch_size=1,
-                #     return_tensors=False,
-                #     add_novelties=False,
-                #     remove_known=False,
-                #     testing=testing.mapped_triples,
-                #     mode="testing",
-                # )
-                # print(pred_df)
+            # Compute KGE scores on test set
+            fake_scores, real_scores = [], []
+            predicted_scores, y_true = [], []
+            for record_30, y_fake_value in zip(testing_30_records, testing_30_y_fake):
+                try:
+                    res: pd.DataFrame = predict_triples_df(
+                        model=my_pykeen_model,
+                        triples=record_30,
+                        triples_factory=testing_30,
+                        batch_size=None,
+                        mode="testing",
+                    )
+                except Exception:
+                    res: pd.DataFrame = predict_triples_df(
+                        model=my_pykeen_model,
+                        triples=record_30,
+                        triples_factory=testing_30,
+                        batch_size=None,
+                        mode=None,  # "testing",
+                    )
+                score = float(res["score"][0])
+                predicted_scores.append(score)
+                y_fake_value = int(y_fake_value)
+                y_true.append(y_fake_value)
+                if y_fake_value == 1:
+                    fake_scores.append(score)
+                elif y_fake_value == 0:
+                    real_scores.append(score)
+                else:
+                    raise ValueError(f"Invalid fake value '{score}'!")
 
-            except NotImplementedError:
-                print(f"{model_name} not implemented!")
-
-                res2 = my_pykeen_model.score_hrt(hrt_batch=testing_30.mapped_triples, mode=None)
-                print(res2)
+            # Analyze KGE scores on test set
+            fake_scores = np.array(fake_scores)
+            print("fake_scores:",
+                  f"shape={fake_scores.shape}",
+                  np.min(a=fake_scores),
+                  np.percentile(a=fake_scores, q=5),
+                  np.median(a=fake_scores),
+                  np.percentile(a=fake_scores, q=95),
+                  np.max(a=fake_scores))
+            real_scores = np.array(real_scores)
+            print("real_scores:",
+                  f"shape={real_scores.shape}",
+                  np.min(a=real_scores),
+                  np.percentile(a=real_scores, q=5),
+                  np.median(a=real_scores),
+                  np.percentile(a=real_scores, q=95),
+                  np.max(a=real_scores))
 
             print("\n")
 
