@@ -69,6 +69,15 @@ def train(training: TriplesFactory,
     else:
         training_kwargs["use_tqdm_batch"] = False
         batch_size = training_kwargs["batch_size"]
+    # manage negative_sampler_kwargs
+    if negative_sampler_kwargs is None:
+        negative_sampler_kwargs = {
+            "filtered": True,
+            "filterer": "bloom"
+        }
+    else:
+        negative_sampler_kwargs["filtered"] = True
+        negative_sampler_kwargs["filterer"] = "bloom"
     # training and evaluation
     return pipeline(
         training=training,
@@ -94,7 +103,8 @@ def train(training: TriplesFactory,
             "batch_size": batch_size,
         },
         evaluation_kwargs={
-            "use_tqdm": True
+            "use_tqdm": True,
+            "filtered": True,
         },
         use_testing_data=True,
         device='gpu',  # 'cpu'

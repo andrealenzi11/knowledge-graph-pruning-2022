@@ -128,7 +128,7 @@ if __name__ == '__main__':
                 pipeline_result = train(
                     training=training,
                     testing=testing,
-                    validation=None,
+                    validation=validation,
                     model_name=model_name,
                     model_kwargs=kwargs_diz["model"],
                     training_kwargs=kwargs_diz["training"],
