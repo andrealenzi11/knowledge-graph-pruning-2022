@@ -6,9 +6,10 @@ import torch
 from pykeen.models.predict import predict_triples_df
 
 from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
-    ORIGINAL, NOISE_30
+    ORIGINAL, NOISE_30, NOISE_10, NOISE_20
 from core.pykeen_wrapper import get_train_test_validation
 from dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
+from utils.confidence_intervals_plotting import plot_confidences_intervals
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -83,10 +84,10 @@ if __name__ == '__main__':
     for noise_level in [
         ORIGINAL,
         # NOISE_5,
-        # NOISE_10,
+        NOISE_10,
         # NOISE_15,
-        # NOISE_20,
-        # NOISE_30,
+        NOISE_20,
+        NOISE_30,
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
         in_folder_path = os.path.join(dataset_models_folder_path, noise_level)
@@ -106,6 +107,9 @@ if __name__ == '__main__':
             in_file = os.path.join(in_folder_path, model_name, "trained_model.pkl")
             print(in_file)
 
+            if model_name == "RESCAL":
+                continue
+
             # if model wa not already trained, skip to the next iteration
             if not os.path.isfile(in_file):
                 print("model not present! \n")
@@ -122,6 +126,7 @@ if __name__ == '__main__':
                 training_scores_tensor = my_pykeen_model.score_hrt(hrt_batch=training_original.mapped_triples,
                                                                    mode=None)
             training_scores_vector = training_scores_tensor.cpu().detach().numpy().reshape(-1)
+            training_scores_mean = np.mean(a=training_scores_vector)
             print("training scores:",
                   f"shape={training_scores_vector.shape}",
                   np.min(a=training_scores_vector),
@@ -144,7 +149,7 @@ if __name__ == '__main__':
                         triples=record_30,
                         triples_factory=testing_30,
                         batch_size=None,
-                        mode="testing",
+                        mode=None,  # "testing",
                     )
                 except Exception:
                     res: pd.DataFrame = predict_triples_df(
@@ -166,7 +171,12 @@ if __name__ == '__main__':
                     raise ValueError(f"Invalid fake value '{score}'!")
 
             # Analyze KGE scores on test set
+            # fake
             fake_scores = np.array(fake_scores)
+            fake_scores_mean = float(np.mean(a=fake_scores))
+            fake_scores_min = float(np.min(a=fake_scores))
+            assert training_scores_mean > fake_scores_mean
+            distance_fake_from_training = abs(training_scores_mean - fake_scores_mean)
             print("fake_scores:",
                   f"shape={fake_scores.shape}",
                   np.min(a=fake_scores),
@@ -174,7 +184,12 @@ if __name__ == '__main__':
                   np.median(a=fake_scores),
                   np.percentile(a=fake_scores, q=95),
                   np.max(a=fake_scores))
+
+            # real
             real_scores = np.array(real_scores)
+            real_scores_mean = float(np.mean(a=real_scores))
+            assert training_scores_mean > real_scores_mean
+            distance_real_from_training = abs(training_scores_mean - real_scores_mean)
             print("real_scores:",
                   f"shape={real_scores.shape}",
                   np.min(a=real_scores),
@@ -182,7 +197,30 @@ if __name__ == '__main__':
                   np.median(a=real_scores),
                   np.percentile(a=real_scores, q=95),
                   np.max(a=real_scores))
+            # score and confidence intervals
+            assert training_scores_mean > fake_scores_min
+            maximum_distance = training_scores_mean - fake_scores_min
+            print(distance_fake_from_training, distance_real_from_training)
+            normalized_fake_dist = distance_fake_from_training * 100 / maximum_distance
+            normalized_real_dist = distance_real_from_training * 100 / maximum_distance
+            inverse_normalized_real_dist = 100. - normalized_real_dist
+            print(normalized_fake_dist, normalized_real_dist)
+            final_score = (normalized_fake_dist + inverse_normalized_real_dist) / 2.
+            print(final_score)
 
+            plot_confidences_intervals(
+                label_values_map={
+                    "training": sorted(list(training_scores_vector)),
+                    "real": sorted(list(real_scores)),
+                    "fake": sorted(list(fake_scores)),
+                },
+                title=f"{model_name}",
+                use_median=True,
+                use_mean=False,
+                percentile_min=2,
+                percentile_max=98,
+                z=1.96,
+                round_digits=4)
             print("\n")
 
     #         print(results_diz["metrics"])
