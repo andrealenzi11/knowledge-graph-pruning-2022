@@ -112,10 +112,15 @@ if __name__ == '__main__':
             ),
             training_loop="slcwa",
             negative_sampler="basic",
+            negative_sampler_kwargs={
+                "filtered": True,
+                "filterer": "bloom"
+            },
             stopper=None,
             evaluator="RankBasedEvaluator",
             evaluation_kwargs={
                 "use_tqdm": True,
+                "filtered": True,
             },
             metric="both.realistic.inverse_harmonic_mean_rank",  # MRR
             direction="maximize",

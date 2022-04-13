@@ -1,7 +1,5 @@
-# class-resolver==0.2.6
-networkx==2.7.1
+networkx==2.8
 nltk==3.7
 openpyxl==3.0.9
 pykeen==1.8.0
-# sdv==0.13.1
 seaborn==0.11.2

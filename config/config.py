@@ -108,7 +108,11 @@ CHECKPOINTS_DIR = os.path.join(RESOURCES_DIR, "checkpoints")
 create_non_existent_folder(folder_path=CHECKPOINTS_DIR)
 
 RESULTS_DIR = os.path.join(RESOURCES_DIR, "results")
+EXPERIMENT_1_DIR = os.path.join(RESULTS_DIR, "experiment_1")
+EXPERIMENT_2_DIR = os.path.join(RESULTS_DIR, "experiment_2")
 create_non_existent_folder(folder_path=RESULTS_DIR)
+create_non_existent_folder(folder_path=EXPERIMENT_1_DIR)
+create_non_existent_folder(folder_path=EXPERIMENT_2_DIR)
 
 TUNING_DIR = os.path.join(RESOURCES_DIR, "tuning")
 create_non_existent_folder(folder_path=TUNING_DIR)
