@@ -3,12 +3,11 @@ import os
 
 import pandas as pd
 
-from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
-    RESULTS_DIR, ORIGINAL, NOISE_5, NOISE_10, NOISE_15, \
-    MR, MRR, HITS_AT_1, HITS_AT_3, HITS_AT_5, HITS_AT_10, \
+from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, \
+    RESULTS_DIR, ORIGINAL, NOISE_10, MR, MRR, HITS_AT_1, HITS_AT_3, HITS_AT_5, HITS_AT_10, \
     BOTH_STRATEGY, HEAD_STRATEGY, TAIL_STRATEGY, \
     REALISTIC_STRATEGY, OPTIMISTIC_STRATEGY, PESSIMISTIC_STRATEGY, NOISE_20, NOISE_30, NATIONS
-from dao.dataset_loading import DatasetPathFactory
+from src.dao.dataset_loading import DatasetPathFactory
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)

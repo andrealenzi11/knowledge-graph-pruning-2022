@@ -6,7 +6,7 @@ import torch
 from pykeen.pipeline import pipeline, PipelineResult
 from pykeen.triples import TriplesFactory
 
-from config.config import DATASETS_DIR, CHECKPOINTS_DIR, MODELS_DIR
+from src.config.config import DATASETS_DIR, CHECKPOINTS_DIR, MODELS_DIR
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)

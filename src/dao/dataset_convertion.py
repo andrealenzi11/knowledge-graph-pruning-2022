@@ -4,7 +4,7 @@ from typing import Optional
 import pandas as pd
 from pykeen import datasets
 
-from config.config import HEAD, RELATION, TAIL
+from src.config.config import HEAD, RELATION, TAIL
 
 
 class DatasetConverter:

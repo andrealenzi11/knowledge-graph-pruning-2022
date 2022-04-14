@@ -5,10 +5,10 @@ from optuna.pruners import PercentilePruner
 from optuna.samplers import TPESampler
 from pykeen.hpo import hpo_pipeline
 
-from config.config import ORIGINAL, COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS, \
+from src.config.config import ORIGINAL, COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS, \
     RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
-from core.pykeen_wrapper import get_train_test_validation
-from dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
+from src.core.pykeen_wrapper import get_train_test_validation
+from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 
 all_datasets_names = [
     COUNTRIES,

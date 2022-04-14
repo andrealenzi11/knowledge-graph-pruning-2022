@@ -1,6 +1,6 @@
 import os
 
-from config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
+from src.config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
     WN18RR, WN18RR_DATASETS_FOLDER_PATH, \
     YAGO310, YAGO310_DATASETS_FOLDER_PATH, \
     COUNTRIES_DATASETS_FOLDER_PATH, COUNTRIES, \
@@ -8,8 +8,8 @@ from config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
     TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
     VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
     TESTING_TSV, TESTING_Y_FAKE_TSV
-from core.noise_generation import NeuralNoiseGenerator
-from dao.dataset_loading import TsvDatasetLoader
+from src.core.noise_generation import NeuralNoiseGenerator
+from src.dao.dataset_loading import TsvDatasetLoader
 
 
 if __name__ == '__main__':

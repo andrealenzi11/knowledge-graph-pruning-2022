@@ -1,12 +1,12 @@
 import os
 
-from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
+from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
     create_non_existent_folder, \
-    ORIGINAL, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_30, \
+    ORIGINAL, NOISE_10, NOISE_20, NOISE_30, \
     RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
-from config.kge_models_config import HYPERPARAMS_CONFIG
-from core.pykeen_wrapper import get_train_test_validation, train, store, load
-from dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
+from src.config.kge_models_config import HYPERPARAMS_CONFIG
+from src.core.pykeen_wrapper import get_train_test_validation, train, store, load
+from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 import os
 
-from config.config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
+from src.config.config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
     WN18RR, WN18RR_DATASETS_FOLDER_PATH, \
     YAGO310, YAGO310_DATASETS_FOLDER_PATH, \
     COUNTRIES, COUNTRIES_DATASETS_FOLDER_PATH, \
@@ -11,8 +11,8 @@ from config.config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
     TESTING_TSV, TESTING_Y_FAKE_TSV, \
     RANDOM_SEED_HEAD_SAMPLING, RANDOM_SEED_RELATION_SAMPLING, RANDOM_SEED_TAIL_SAMPLING, NOISE_20, NOISE_30, NATIONS, \
     NATIONS_DATASETS_FOLDER_PATH, NOISE_25
-from core.noise_generation import DeterministicNoiseGenerator
-from dao.dataset_loading import TsvDatasetLoader
+from src.core.noise_generation import DeterministicNoiseGenerator
+from src.dao.dataset_loading import TsvDatasetLoader
 
 
 if __name__ == '__main__':

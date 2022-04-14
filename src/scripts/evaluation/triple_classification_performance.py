@@ -5,11 +5,11 @@ import pandas as pd
 import torch
 from pykeen.models.predict import predict_triples_df
 
-from config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
+from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
     ORIGINAL, NOISE_30, NOISE_10, NOISE_20, EXPERIMENT_2_DIR
-from core.pykeen_wrapper import get_train_test_validation
-from dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
-from utils.confidence_intervals_plotting import plot_confidences_intervals
+from src.core.pykeen_wrapper import get_train_test_validation
+from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
+from src.utils.confidence_intervals_plotting import plot_confidences_intervals
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -179,8 +179,12 @@ if __name__ == '__main__':
                   np.max(a=real_scores))
 
             # compute distance (greater is better)
+            maximum = np.max(training_scores_vector)
+            minimum = np.min(fake_scores)
             if real_scores_center > fake_scores_center:
-                distance = round(abs(real_scores_center - fake_scores_center), 4)
+                distance = round(
+                    abs(real_scores_center - fake_scores_center) / abs(maximum - minimum),
+                    4)
                 row[model_name] = distance
                 print(f"distance: {distance}")
             else:
@@ -200,8 +204,8 @@ if __name__ == '__main__':
                     title=f"{model_name}",
                     use_median=use_median_flag,
                     use_mean=use_mean_flag,
-                    percentile_min=5,
-                    percentile_max=95,
+                    percentile_min=0,
+                    percentile_max=100,
                     z=1.645,  # 90%
                     round_digits=4)
 

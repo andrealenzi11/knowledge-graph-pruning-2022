@@ -1,6 +1,6 @@
-from config.config import COUNTRIES, CODEXSMALL, NATIONS
+from src.config.config import COUNTRIES, NATIONS
 
-from config.config import RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
+from src.config.config import RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
 
 HYPERPARAMS_CONFIG = {
 

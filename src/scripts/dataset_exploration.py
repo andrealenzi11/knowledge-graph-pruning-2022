@@ -1,4 +1,4 @@
-from dao.dataset_loading import PykeenDatasetLoader
+from src.dao.dataset_loading import PykeenDatasetLoader
 
 if __name__ == '__main__':
 

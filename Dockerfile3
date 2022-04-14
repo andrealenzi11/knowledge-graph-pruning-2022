@@ -1,0 +1,7 @@
+FROM andrealenzi/ubucudapy:pykeen1.8.0
+USER root
+WORKDIR /
+ENV PYTHONPATH=$PYTHONPATH:/
+ADD src /src
+
+#  docker build -t andrealenzi/ubucudapy:graph_pruning_study_v1 -f Dockerfile3 .

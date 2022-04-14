@@ -1,0 +1,7 @@
+FROM andrealenzi/ubucudapy:20.04_11.6.2_3.8
+USER root
+WORKDIR /
+RUN pip3 install networkx==2.8 nltk==3.7 openpyxl==3.0.9 pykeen==1.8.0 seaborn==0.11.2 && \
+    python3 -m nltk.downloader stopwords punkt omw-1.4
+
+#  docker build -t andrealenzi/ubucudapy:pykeen1.8.0 -f Dockerfile2 .

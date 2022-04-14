@@ -4,8 +4,8 @@ from typing import Tuple, Optional
 
 import pandas as pd
 
-from config.config import HEAD, RELATION, TAIL, FAKE_FLAG, TRAINING, VALIDATION, TESTING
-from dao.data_model import NoisyDataset
+from src.config.config import HEAD, RELATION, TAIL, FAKE_FLAG, TRAINING, VALIDATION, TESTING
+from src.dao.data_model import NoisyDataset
 
 
 # from sdv.tabular import CTGAN

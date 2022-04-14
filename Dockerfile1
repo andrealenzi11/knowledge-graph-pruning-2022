@@ -1,0 +1,13 @@
+FROM nvidia/cuda:11.6.2-cudnn8-runtime-ubuntu20.04
+USER root
+WORKDIR /
+ENV TZ=Europe/Rome
+ENV PYTHONPATH=$PYTHONPATH:/
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone && \
+    apt-get update && \
+    apt-get -y upgrade && \
+    apt-get -y install build-essential python3 python3-dev python3-pip python3-wheel python3-setuptools && \
+    pip3 install --upgrade pip setuptools wheel
+
+#  docker build -t andrealenzi/ubucudapy:20.04_11.6.2_3.8 -f Dockerfile1 .
