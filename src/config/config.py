@@ -1,4 +1,5 @@
 import os
+import requests
 import subprocess
 from typing import Sequence
 
@@ -97,6 +98,8 @@ PESSIMISTIC_STRATEGY = "pessimistic"
 
 # ==================== First Level Resources Folders ==================== #
 RESOURCES_DIR = os.path.join(os.environ['HOME'], "resources", "graph_pruning")
+
+create_non_existent_folder(folder_path=RESOURCES_DIR)
 
 DATASETS_DIR = os.path.join(RESOURCES_DIR, "datasets")
 create_non_existent_folder(folder_path=DATASETS_DIR)
@@ -280,7 +283,10 @@ FB15K237_MAPPING_URL = \
 
 if not os.path.isfile(FB15K237_MAPPING_FILE):
     try:
-        subprocess.run(['wget', '--no-check-certificate', FB15K237_MAPPING_URL, '-O', FB15K237_MAPPING_FILE])
+        resp1 = requests.get(url=FB15K237_MAPPING_URL, verify=False)
+        with open(FB15K237_MAPPING_FILE, 'wb') as fw1:
+            fw1.write(resp1.content)
+        # subprocess.run(['wget', '--no-check-certificate', FB15K237_MAPPING_URL, '-O', FB15K237_MAPPING_FILE])
     except Exception:
         raise ValueError(f"Error in download FB15K237 mapping file! \n"
                          f"\t\t (1) Download it manually from the following URL: {FB15K237_MAPPING_URL} \n"
@@ -297,9 +303,12 @@ CODEXSMALL_ENTITIES_MAPPING_URL = \
 
 if not os.path.isfile(CODEXSMALL_ENTITIES_MAPPING_FILE):
     try:
-        subprocess.run([
-            'wget', '--no-check-certificate', CODEXSMALL_ENTITIES_MAPPING_URL, '-O', CODEXSMALL_ENTITIES_MAPPING_FILE
-        ])
+        resp2 = requests.get(url=CODEXSMALL_ENTITIES_MAPPING_URL, verify=False)
+        with open(CODEXSMALL_ENTITIES_MAPPING_FILE, 'wb') as fw2:
+            fw2.write(resp2.content)
+        # subprocess.run([
+        #    'wget', '--no-check-certificate', CODEXSMALL_ENTITIES_MAPPING_URL, '-O', CODEXSMALL_ENTITIES_MAPPING_FILE
+        # ])
     except Exception:
         raise ValueError(f"Error in download CODEXSMALL mapping file for Entities! \n"
                          f"\t\t (1) Download it manually from the following URL: {CODEXSMALL_ENTITIES_MAPPING_URL} \n"
@@ -312,9 +321,12 @@ CODEXSMALL_RELATIONS_MAPPING_URL = \
 
 if not os.path.isfile(CODEXSMALL_RELATIONS_MAPPING_FILE):
     try:
-        subprocess.run([
-            'wget', '--no-check-certificate', CODEXSMALL_RELATIONS_MAPPING_URL, '-O', CODEXSMALL_RELATIONS_MAPPING_FILE
-        ])
+        resp3 = requests.get(url=CODEXSMALL_RELATIONS_MAPPING_URL, verify=False)
+        with open(CODEXSMALL_RELATIONS_MAPPING_FILE, 'wb') as fw3:
+            fw3.write(resp3.content)
+        # subprocess.run([
+        #    'wget', '--no-check-certificate', CODEXSMALL_RELATIONS_MAPPING_URL, '-O', CODEXSMALL_RELATIONS_MAPPING_FILE
+        # ])
     except Exception:
         raise ValueError(f"Error in download CODEXSMALL mapping file for Relations! \n"
                          f"\t\t (1) Download it manually from the following URL: {CODEXSMALL_RELATIONS_MAPPING_URL} \n"

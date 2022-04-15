@@ -14,7 +14,10 @@ from src.dao.dataset_storing import DatasetExporter
 if __name__ == '__main__':
 
     try:
+        nltk.download('punkt')
+        nltk.download('stopwords')
         nltk.download('omw-1.4')
+        nltk.download('wordnet')
     except Exception:
         print("Error in download NLTK WordNet!")
 

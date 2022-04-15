@@ -1,7 +1,13 @@
 FROM andrealenzi/ubucudapy:pykeen1.8.0
 USER root
 WORKDIR /
+RUN useradd -m lenzi
+RUN usermod -d /home/lenzi lenzi
 ENV PYTHONPATH=$PYTHONPATH:/
+ENV HOME /home/lenzi
+ADD info.sh /
 ADD src /src
+ADD jobs /jobs
+RUN cp -r /jobs /home/lenzi
 
 #  docker build -t andrealenzi/ubucudapy:graph_pruning_study_v1 -f Dockerfile3 .
