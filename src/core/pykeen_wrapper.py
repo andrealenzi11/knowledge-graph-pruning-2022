@@ -52,65 +52,72 @@ def train(training: TriplesFactory,
           validation: Optional[TriplesFactory],
           model_name: str,
           model_kwargs: Optional[dict] = None,
-          training_kwargs: Optional[dict] = None,
           loss_kwargs: Optional[dict] = None,
           regularizer_kwargs: Optional[dict] = None,
           optimizer_kwargs: Optional[dict] = None,
           negative_sampler_kwargs: Optional[dict] = None,
-          stopper: Optional[str] = None) -> PipelineResult:
-    # manage training kwargs
+          training_kwargs: Optional[dict] = None) -> PipelineResult:
+
+    # === Manage training kwargs === #
     if training_kwargs is None:
-        training_kwargs = {
+        training_kwargs = {             # predefined dict with default values
             "num_epochs": 100,
             "batch_size": 128,
-            "use_tqdm_batch": False
+            "use_tqdm_batch": False,
         }
-        batch_size = 128
     else:
         training_kwargs["use_tqdm_batch"] = False
-        batch_size = training_kwargs["batch_size"]
-    # manage negative_sampler_kwargs
+
+    # === Manage negative_sampler_kwargs === #
     if negative_sampler_kwargs is None:
-        negative_sampler_kwargs = {
+        negative_sampler_kwargs = {      # predefined dict with default values
             "filtered": True,
-            "filterer": "bloom"
+            "filterer": "python-set",   # "bloom"
         }
     else:
         negative_sampler_kwargs["filtered"] = True
-        negative_sampler_kwargs["filterer"] = "bloom"
-    # training and evaluation
+        negative_sampler_kwargs["filterer"] = "python-set"   # "bloom"
+
+    # === Training and Evaluation === #
     return pipeline(
+        # dataset args
         training=training,
         validation=validation,
         testing=testing,
-        dataset_kwargs={
-            "create_inverse_triples": False,
-        },
+        # model args
         model=model_name,
         model_kwargs=model_kwargs,
-        training_kwargs=training_kwargs,
+        # loss args
+        loss_kwargs=loss_kwargs,
+        # regularize args
+        regularizer_kwargs=regularizer_kwargs,
+        # optimizer args
         optimizer='Adam',
         optimizer_kwargs=optimizer_kwargs,
         clear_optimizer=True,
-        loss_kwargs=loss_kwargs,
-        regularizer_kwargs=regularizer_kwargs,
+        # training Loop args
         training_loop='slcwa',
         negative_sampler='basic',
         negative_sampler_kwargs=negative_sampler_kwargs,
-        stopper=stopper,
+        # training args
+        training_kwargs=training_kwargs,
+        stopper=None,
+        # evaluation args
         evaluator="RankBasedEvaluator",
         evaluator_kwargs={
-            "batch_size": batch_size,
+            "filtered": True,
+            # "batch_size": batch_size,
         },
         evaluation_kwargs={
             "use_tqdm": True,
-            "filtered": True,
         },
+        # misc args
+        device='cuda:0',  # 'cpu'
+        # random_seed=11,
         use_testing_data=True,
-        device='gpu',  # 'cpu'
-        use_tqdm=True,
         evaluation_fallback=True,
         filter_validation_when_testing=False,
+        use_tqdm=True,
     )
 
 

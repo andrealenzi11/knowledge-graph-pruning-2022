@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 
@@ -11,12 +12,12 @@ from src.core.pykeen_wrapper import get_train_test_validation
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 
 all_datasets_names = [
-    COUNTRIES,
-    WN18RR,
-    FB15K237,
-    YAGO310,
-    CODEXSMALL,
-    NATIONS,
+    FB15K237,  # "FB15K237"
+    WN18RR,  # "WN18RR"
+    YAGO310,  # "YAGO310"
+    COUNTRIES,  # "COUNTRIES"
+    CODEXSMALL,  # "CODEXSMALL"
+    NATIONS,  # "NATIONS"
 ]
 
 valid_kge_models = [
@@ -33,35 +34,121 @@ valid_kge_models = [
     BOXE,
 ]
 
-
 if __name__ == '__main__':
 
-    # Set you dataset
-    current_dataset_name = NATIONS
+    # Instantiate the parser for the command line arguments
+    args_parser = argparse.ArgumentParser()
 
-    # iterate over all models
+    # Add command line arguments entries
+    args_parser.add_argument('dataset',
+                             help='Dataset Name',
+                             type=str,
+                             choices=all_datasets_names)
+    args_parser.add_argument('-n', '--num_trials',
+                             dest="num_trials",
+                             help='Number of trials for the Sampler',
+                             type=int,
+                             required=False,
+                             default=50)
+    args_parser.add_argument('-s', '--num_startup_trials',
+                             dest="num_startup_trials",
+                             help='Number of startup trials for the Sampler',
+                             type=int,
+                             required=False,
+                             default=30)
+
+    # Parse command line arguments
+    cl_args = args_parser.parse_args()
+
+    # Access to the command line arguments
+    print(f"Argument values: \n\t {cl_args}")
+    dataset_name = str(cl_args.dataset).upper().strip()
+    num_trials_sampler = int(cl_args.num_trials)
+    num_startup_trials_sampler = int(cl_args.num_startup_trials)
+    assert num_startup_trials_sampler < num_trials_sampler
+    if num_trials_sampler > 15:
+        num_startup_trials_pruner = 15
+        assert num_startup_trials_pruner < num_trials_sampler
+    else:
+        num_startup_trials_pruner = num_startup_trials_sampler
+        assert num_startup_trials_pruner == num_startup_trials_sampler
+        assert num_startup_trials_pruner < num_trials_sampler
+
+    print("\n")
+    print(f"dataset_name: {dataset_name}")
+    print(f"num_trials_sampler: {num_trials_sampler}")
+    print(f"num_startup_trials_sampler: {num_startup_trials_sampler}")
+    print(f"num_startup_trials_pruner: {num_startup_trials_pruner}")
+
+    # === Get Input Dataset: Training, Validation, Testing === #
+    # check on input datset
+    if dataset_name not in all_datasets_names:
+        raise ValueError(f"Invalid dataset name '{dataset_name}'! \n"
+                         f"Specify one of the following values: {all_datasets_names} \n")
+    # dataset loader
+    datasets_loader = TsvDatasetLoader(dataset_name=dataset_name,
+                                       noise_level=ORIGINAL)
+
+    # paths
+    training_path, validation_path, testing_path = \
+        datasets_loader.get_training_validation_testing_dfs_paths(noisy_test_flag=False)
+    assert "training" in training_path.lower()
+    assert "validation" in validation_path.lower()
+    assert "testing" in testing_path.lower()
+
+    # partitions (triples factories)
+    training, testing, validation = get_train_test_validation(training_set_path=training_path,
+                                                              test_set_path=testing_path,
+                                                              validation_set_path=validation_path,
+                                                              create_inverse_triples=False)
+    print("\n\t (*) training:")
+    print(f"\t\t\t path={training_path}")
+    print(f"\t\t\t #triples={training.num_triples}  | "
+          f" #entities={training.num_entities}  | "
+          f" #relations={training.num_relations} \n")
+    print("\t (*) validation:")
+    print(f"\t\t\t path={validation_path}")
+    print(f"\t\t\t #triples={validation.num_triples}  | "
+          f" #entities={validation.num_entities}  | "
+          f" #relations={validation.num_relations} \n")
+    print("\t (*) testing:")
+    print(f"\t\t\t path={testing_path}")
+    print(f"\t\t\t #triples={testing.num_triples}  | "
+          f" #entities={testing.num_entities}  | "
+          f" #relations={testing.num_relations} \n")
+
+    # ===== iterate over all models ===== #
     for kge_model_name in valid_kge_models:
 
         print(f"\n\n\n#################### {kge_model_name} ####################")
+        if kge_model_name not in valid_kge_models:
+            raise ValueError(f"Invalid model name '{kge_model_name}'!")
+
+        if kge_model_name == BOXE:
+            negative_sampler_kwargs = None
+        else:
+            negative_sampler_kwargs = {
+                "filtered": True,
+                "filterer": "python-set",  # "bloom"
+            }
 
         # === Set your Configuration === #
         configuration = dict(
-            dataset_name=current_dataset_name,
+            dataset_name=dataset_name,
+            training_path=training_path,
+            validation_path=validation_path,
+            testing_path=testing_path,
             model_name=kge_model_name,
-            num_trials=30,
-            num_startup_trials_sampler=20,  # default: 10
+            device="cuda:0",
+            negative_sampler_kwargs=negative_sampler_kwargs,
+            num_trials=num_trials_sampler,
+            num_startup_trials_sampler=num_startup_trials_sampler,  # default: 10
             num_expected_improvement_candidates_sampler=32,  # default: 24
-            num_startup_trials_pruner=5,  # default: 5
+            num_startup_trials_pruner=num_startup_trials_pruner,  # default: 5
             percentile_pruner=70.0,
             max_batch_size=256,
             max_num_epoch=200,
         )
-
-        # === Check Configuration === #
-        if configuration["dataset_name"] not in all_datasets_names:
-            raise ValueError(f"Invalid dataset name '{configuration['dataset_name']}'!")
-        if configuration["model_name"] not in valid_kge_models:
-            raise ValueError(f"Invalid model name '{configuration['model_name']}'!")
 
         # ==== Print Current Configuration=== #
         print("\n>>>>>>>> CONFIGURATION <<<<<<<<")
@@ -69,24 +156,46 @@ if __name__ == '__main__':
             print(f"\t\t {k} = {v}")
         print(">>>>>>>>>>>>>>><<<<<<<<<<<<<<< \n")
 
-        # === Get Input Dataset: Training, Validation, Testing === #
-        datasets_loader = TsvDatasetLoader(dataset_name=configuration["dataset_name"],
-                                           noise_level=ORIGINAL)
-        training_path, validation_path, testing_path = \
-            datasets_loader.get_training_validation_testing_dfs_paths(noisy_test_flag=False)
-        training, testing, validation = get_train_test_validation(training_set_path=training_path,
-                                                                  test_set_path=testing_path,
-                                                                  validation_set_path=validation_path,
-                                                                  create_inverse_triples=False)
-        # m_obj = TransE(triples_factory=training).half()  # convert to float16 format
-
         # === Start HPO Study === #
         hpo_pipeline_result = hpo_pipeline(
+            # dataset args
             training=training,
             validation=validation,
             testing=testing,
+            # model args
             model=configuration["model_name"],
-            n_trials=configuration["num_trials"],
+            # optimizer args
+            optimizer="Adam",
+            optimizer_kwargs_ranges=dict(
+                lr=dict(type=float, low=0.0001, high=0.01, scale="log"),
+            ),
+            # # training loop args
+            training_loop="slcwa",
+            negative_sampler="basic",
+            negative_sampler_kwargs=negative_sampler_kwargs,
+            # training args
+            training_kwargs={
+                "use_tqdm_batch": False,
+            },
+            training_kwargs_ranges=dict(
+                num_epochs=dict(type=int, low=30, high=configuration["max_num_epoch"], q=5),
+                batch_size=dict(type=int, low=64, high=configuration["max_batch_size"], q=64),
+            ),
+            stopper=None,
+            # evaluation args
+            evaluator="RankBasedEvaluator",
+            evaluation_kwargs={
+                "use_tqdm": True,
+            },
+            evaluator_kwargs={
+                "filtered": True,
+                # "batch_size": 128,
+            },
+            metric="both.realistic.inverse_harmonic_mean_rank",  # MRR
+            filter_validation_when_testing=False,
+            # misc args
+            device=configuration["device"],
+            # Optuna study args
             sampler=TPESampler(
                 consider_prior=True,
                 prior_weight=1.0,
@@ -99,32 +208,8 @@ if __name__ == '__main__':
                 percentile=configuration["percentile_pruner"],
                 n_startup_trials=configuration["num_startup_trials_pruner"],
             ),
-            training_kwargs={
-                "use_tqdm_batch": False,
-            },
-            training_kwargs_ranges=dict(
-                num_epochs=dict(type=int, low=30, high=configuration["max_num_epoch"], q=5),
-                batch_size=dict(type=int, low=64, high=configuration["max_batch_size"], q=64),
-            ),
-            optimizer="Adam",
-            optimizer_kwargs_ranges=dict(
-                lr=dict(type=float, low=0.0001, high=0.01, scale="log"),
-            ),
-            training_loop="slcwa",
-            negative_sampler="basic",
-            negative_sampler_kwargs={
-                "filtered": True,
-                "filterer": "bloom"
-            },
-            stopper=None,
-            evaluator="RankBasedEvaluator",
-            evaluation_kwargs={
-                "use_tqdm": True,
-                "filtered": True,
-            },
-            metric="both.realistic.inverse_harmonic_mean_rank",  # MRR
             direction="maximize",
-            device="gpu",  # 'cpu' | 'gpu'
+            n_trials=configuration["num_trials"],
         )
 
         # === See HPO Results === #
@@ -148,7 +233,10 @@ if __name__ == '__main__':
         # === Save Configuration and HPO results === #
         dataset_tuning_folder_path = DatasetPathFactory(
             dataset_name=configuration["dataset_name"]).get_tuning_folder_path()
+        assert dataset_name in dataset_tuning_folder_path
+
         out_file_path = os.path.join(dataset_tuning_folder_path, f"{configuration['model_name']}_study.json")
+
         output_diz = dict(
             starting_configuration=dict(configuration),
             number=int(hpo_pipeline_result.study.best_trial.number),

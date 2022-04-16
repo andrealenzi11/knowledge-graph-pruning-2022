@@ -1,12 +1,57 @@
+import json
 import os
+from typing import Dict, Optional
 
 from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
     create_non_existent_folder, \
     ORIGINAL, NOISE_10, NOISE_20, NOISE_30, \
     RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
-from src.config.kge_models_config import HYPERPARAMS_CONFIG
 from src.core.pykeen_wrapper import get_train_test_validation, train, store, load
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
+
+all_datasets_names = [
+    FB15K237,  # "FB15K237"
+    WN18RR,  # "WN18RR"
+    YAGO310,  # "YAGO310"
+    COUNTRIES,  # "COUNTRIES"
+    CODEXSMALL,  # "CODEXSMALL"
+    NATIONS,  # "NATIONS"
+]
+
+valid_kge_models = [
+    RESCAL,
+    TRANSE,
+    DISTMULT,
+    TRANSH,
+    COMPLEX,
+    HOLE,
+    CONVE,
+    ROTATE,
+    PAIRRE,
+    AUTOSF,
+    BOXE,
+]
+
+
+def get_best_hyper_parameters_diz(current_dataset_name: str, current_model_name: str) -> Optional[Dict[str, float]]:
+    if current_dataset_name not in all_datasets_names:
+        raise ValueError(f"Invalid dataset name '{current_dataset_name}'!")
+    if current_model_name not in valid_kge_models:
+        raise ValueError(f"Invalid model name '{current_model_name}'!")
+    dataset_tuning_folder_path = DatasetPathFactory(dataset_name=current_dataset_name).get_tuning_folder_path()
+    assert dataset_name in dataset_tuning_folder_path
+    in_file_path = os.path.join(dataset_tuning_folder_path, f"{current_model_name}_study.json")
+    assert current_model_name in in_file_path
+    if os.path.isfile(in_file_path):
+        with open(in_file_path, 'r') as fr:
+            study_diz = json.load(fr)
+            best_hyper_params_diz = study_diz["best_params"]
+            # BoxE special case (bug)
+            if (current_model_name == BOXE) and ("loss.adversarial_temperature" in best_hyper_params_diz):
+                del best_hyper_params_diz["loss.adversarial_temperature"]
+            return study_diz["best_params"]
+    else:
+        return None
 
 
 if __name__ == '__main__':
@@ -70,16 +115,16 @@ if __name__ == '__main__':
         print("\n\n>>> Start KGE models training...\n")
 
         for model_name, year in [
-            (RESCAL, 2011),
-            (TRANSE, 2013),
-            (DISTMULT, 2014),
-            (TRANSH, 2014),
-            (COMPLEX, 2016),
-            (HOLE, 2016),
-            (CONVE, 2018),
-            (ROTATE, 2019),
-            (PAIRRE, 2020),
-            (AUTOSF, 2020),
+            # (RESCAL, 2011),
+            # (TRANSE, 2013),
+            # (DISTMULT, 2014),
+            # (TRANSH, 2014),
+            # (COMPLEX, 2016),
+            # (HOLE, 2016),
+            # (CONVE, 2018),
+            # (ROTATE, 2019),
+            # (PAIRRE, 2020),
+            # (AUTOSF, 2020),
             (BOXE, 2020),
         ]:
             print(f"\n>>>>>>>>>>>>>>>>>>>> {model_name} ({year}) <<<<<<<<<<<<<<<<<<<<")
@@ -111,7 +156,9 @@ if __name__ == '__main__':
                     "negative_sampler": None,
                 }
                 try:
-                    hyperparams_diz = HYPERPARAMS_CONFIG[dataset_name][model_name]
+                    # hyperparams_diz = HYPERPARAMS_CONFIG[dataset_name][model_name]
+                    hyperparams_diz = get_best_hyper_parameters_diz(current_dataset_name=dataset_name,
+                                                                    current_model_name=model_name)
                     for k, v in hyperparams_diz.items():
                         arr_tmp = k.split(".")
                         assert len(arr_tmp) == 2
@@ -136,7 +183,6 @@ if __name__ == '__main__':
                     regularizer_kwargs=kwargs_diz["regularizer"],
                     optimizer_kwargs=kwargs_diz["optimizer"],
                     negative_sampler_kwargs=kwargs_diz["negative_sampler"],
-                    stopper=stopper,
                 )
 
                 print(f"- Saving '{model_name}' model......")
