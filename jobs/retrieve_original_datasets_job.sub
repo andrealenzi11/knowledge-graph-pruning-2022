@@ -1,5 +1,5 @@
 universe                = docker
-docker_image            = andrealenzi/ubucudapy:graph_pruning_study_v7
+docker_image            = andrealenzi/ubucudapy:graph_pruning_study_v8
 executable              = /usr/bin/python3
 arguments               = /src/scripts/exporting_original_datasets_to_tsv_files.py
 should_transfer_files   = YES

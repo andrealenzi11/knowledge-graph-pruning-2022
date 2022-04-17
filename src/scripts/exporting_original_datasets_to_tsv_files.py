@@ -19,7 +19,7 @@ if __name__ == '__main__':
         nltk.download('omw-1.4')
         nltk.download('wordnet')
     except Exception:
-        print("Error in download NLTK WordNet!")
+        print("Error in download NLTK resources!")
 
     # WN18RR entities_id_label_map
     wordnet_offset_2_wordnet_name_map = {str(s.offset()).lstrip("0"): str(s.name()) for s in wordnet.all_synsets()}
@@ -91,6 +91,8 @@ if __name__ == '__main__':
         print("\n - out_folder_path:")
         my_out_folder_path = os.path.join(DATASETS_DIR, current_dataset_name, ORIGINAL)
         print(my_out_folder_path)
+        assert ORIGINAL in my_out_folder_path
+        assert current_dataset_name in my_out_folder_path
 
         DatasetExporter(output_folder=my_out_folder_path,
                         training_df=my_training_df,

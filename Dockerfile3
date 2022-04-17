@@ -7,7 +7,8 @@ ENV PYTHONPATH=$PYTHONPATH:/
 ENV HOME /home/lenzi
 ADD info.sh /
 ADD src /src
-ADD jobs /jobs
-RUN cp -r /jobs /home/lenzi
+ADD jobs /home/lenzi/jobs
 
-#  docker build -t andrealenzi/ubucudapy:graph_pruning_study_v1 -f Dockerfile3 .
+# docker build -t andrealenzi/ubucudapy:graph_pruning_study_v1 -f Dockerfile3 .
+# docker run -it --rm --gpus all --name prova1 andrealenzi/ubucudapy:graph_pruning_study_v1 bash
+# docker push andrealenzi/ubucudapy:graph_pruning_study_v1

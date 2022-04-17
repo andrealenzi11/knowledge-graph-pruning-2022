@@ -57,26 +57,31 @@ def train(training: TriplesFactory,
           optimizer_kwargs: Optional[dict] = None,
           negative_sampler_kwargs: Optional[dict] = None,
           training_kwargs: Optional[dict] = None) -> PipelineResult:
-
     # === Manage training kwargs === #
     if training_kwargs is None:
-        training_kwargs = {             # predefined dict with default values
+        # create a new predefined dict with default values
+        training_kwargs = {
             "num_epochs": 100,
             "batch_size": 128,
             "use_tqdm_batch": False,
         }
     else:
+        # add a new entry to an already existent dict
+        assert isinstance(training_kwargs, dict)
         training_kwargs["use_tqdm_batch"] = False
 
     # === Manage negative_sampler_kwargs === #
     if negative_sampler_kwargs is None:
-        negative_sampler_kwargs = {      # predefined dict with default values
+        # create a new predefined dict with default values
+        negative_sampler_kwargs = {
             "filtered": True,
-            "filterer": "python-set",   # "bloom"
+            "filterer": "python-set",  # "bloom"
         }
     else:
+        # add new entries to an already existent dict
+        assert isinstance(negative_sampler_kwargs, dict)
         negative_sampler_kwargs["filtered"] = True
-        negative_sampler_kwargs["filterer"] = "python-set"   # "bloom"
+        negative_sampler_kwargs["filterer"] = "python-set"  # "bloom"
 
     # === Training and Evaluation === #
     return pipeline(

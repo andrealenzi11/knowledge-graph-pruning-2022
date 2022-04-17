@@ -1,7 +1,7 @@
 import os
-import requests
-import subprocess
 from typing import Sequence
+
+import requests
 
 
 def create_non_existent_folder(folder_path: str):
@@ -79,7 +79,7 @@ TESTING = "testing"
 
 # ==================== metrics names and evaluation strategy ==================== #
 # Link Prediction Metrics
-MR = "mr"   # arithmetic_mean_rank
+MR = "mr"  # arithmetic_mean_rank
 MRR = "mrr"  # inverse_harmonic_mean_rank
 HITS_AT_1 = "hits_at_1"  # hits_at_K=1
 HITS_AT_3 = "hits_at_3"  # hits_at_K=3
@@ -187,7 +187,6 @@ YAGO310_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, YAGO310)
 create_non_existent_folder(folder_path=YAGO310_MODELS_FOLDER_PATH)
 create_non_existent_folders(root_folder_path=YAGO310_MODELS_FOLDER_PATH,
                             sub_folders_paths=ALL_NOISE_LEVELS)
-
 
 # countries sub-folder
 COUNTRIES_MODELS_FOLDER_PATH = os.path.join(MODELS_DIR, COUNTRIES)

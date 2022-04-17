@@ -61,10 +61,13 @@ if __name__ == '__main__':
     cl_args = args_parser.parse_args()
 
     # Access to the command line arguments
-    print(f"Argument values: \n\t {cl_args}")
+    print(f"Argument values: \n\t {cl_args} \n")
     dataset_name = str(cl_args.dataset).upper().strip()
+    print(f"dataset_name: {dataset_name}")
     num_trials_sampler = int(cl_args.num_trials)
+    print(f"num_trials_sampler: {num_trials_sampler}")
     num_startup_trials_sampler = int(cl_args.num_startup_trials)
+    print(f"num_startup_trials_sampler: {num_startup_trials_sampler}")
     assert num_startup_trials_sampler < num_trials_sampler
     if num_trials_sampler > 15:
         num_startup_trials_pruner = 15
@@ -73,11 +76,6 @@ if __name__ == '__main__':
         num_startup_trials_pruner = num_startup_trials_sampler
         assert num_startup_trials_pruner == num_startup_trials_sampler
         assert num_startup_trials_pruner < num_trials_sampler
-
-    print("\n")
-    print(f"dataset_name: {dataset_name}")
-    print(f"num_trials_sampler: {num_trials_sampler}")
-    print(f"num_startup_trials_sampler: {num_startup_trials_sampler}")
     print(f"num_startup_trials_pruner: {num_startup_trials_pruner}")
 
     # === Get Input Dataset: Training, Validation, Testing === #
@@ -92,9 +90,15 @@ if __name__ == '__main__':
     # paths
     training_path, validation_path, testing_path = \
         datasets_loader.get_training_validation_testing_dfs_paths(noisy_test_flag=False)
-    assert "training" in training_path.lower()
-    assert "validation" in validation_path.lower()
-    assert "testing" in testing_path.lower()
+    assert "training" in training_path
+    assert ORIGINAL in training_path
+    assert dataset_name in training_path
+    assert "validation" in validation_path
+    assert ORIGINAL in validation_path
+    assert dataset_name in validation_path
+    assert "testing" in testing_path
+    assert ORIGINAL in testing_path
+    assert dataset_name in testing_path
 
     # partitions (triples factories)
     training, testing, validation = get_train_test_validation(training_set_path=training_path,
@@ -106,11 +110,13 @@ if __name__ == '__main__':
     print(f"\t\t\t #triples={training.num_triples}  | "
           f" #entities={training.num_entities}  | "
           f" #relations={training.num_relations} \n")
+
     print("\t (*) validation:")
     print(f"\t\t\t path={validation_path}")
     print(f"\t\t\t #triples={validation.num_triples}  | "
           f" #entities={validation.num_entities}  | "
           f" #relations={validation.num_relations} \n")
+
     print("\t (*) testing:")
     print(f"\t\t\t path={testing_path}")
     print(f"\t\t\t #triples={testing.num_triples}  | "
@@ -124,8 +130,10 @@ if __name__ == '__main__':
         if kge_model_name not in valid_kge_models:
             raise ValueError(f"Invalid model name '{kge_model_name}'!")
 
+        # Special case for BoxE (bug: BoxE hpo_pipeline does not work on GPU whit negative sampler filtering)
         if kge_model_name == BOXE:
             negative_sampler_kwargs = None
+        # Otherwise
         else:
             negative_sampler_kwargs = {
                 "filtered": True,
@@ -139,7 +147,7 @@ if __name__ == '__main__':
             validation_path=validation_path,
             testing_path=testing_path,
             model_name=kge_model_name,
-            device="cuda:0",
+            device="cuda:0",  # "cpu"
             negative_sampler_kwargs=negative_sampler_kwargs,
             num_trials=num_trials_sampler,
             num_startup_trials_sampler=num_startup_trials_sampler,  # default: 10

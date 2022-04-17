@@ -27,15 +27,19 @@ if __name__ == '__main__':
     ]:
 
         print(f"\n\n>>>>>>>>>>>>>>>>>>>> {dataset_name} <<<<<<<<<<<<<<<<<<<<")
+        assert dataset_name in dataset_folder
 
         tsv_dataset_loader = TsvDatasetLoader(dataset_name=dataset_name,
                                               noise_level=ORIGINAL)
 
         print(f"\n >>> Original Dataset '{dataset_name}' Info:")
 
-        assert "training" in tsv_dataset_loader.in_path_noisy_df_training.lower()
-        assert "validation" in tsv_dataset_loader.in_path_noisy_df_validation.lower()
-        assert "testing" in tsv_dataset_loader.in_path_noisy_df_testing.lower()
+        assert "training" in tsv_dataset_loader.in_path_noisy_df_training
+        assert ORIGINAL in tsv_dataset_loader.in_path_noisy_df_training
+        assert "validation" in tsv_dataset_loader.in_path_noisy_df_validation
+        assert ORIGINAL in tsv_dataset_loader.in_path_noisy_df_validation
+        assert "testing" in tsv_dataset_loader.in_path_noisy_df_testing
+        assert ORIGINAL in tsv_dataset_loader.in_path_noisy_df_testing
 
         print(" - Paths:")
         df_training, df_validation, df_testing = \
@@ -79,7 +83,9 @@ if __name__ == '__main__':
             print(training_df_out_path)
             print(training_y_fake_out_path)
             assert "training" in training_df_out_path
+            assert noise_percentage_folder in training_df_out_path
             assert "training" in training_y_fake_out_path
+            assert noise_percentage_folder in training_y_fake_out_path
             noisy_dataset.training_df.to_csv(
                 path_or_buf=training_df_out_path,
                 sep="\t", header=False, index=False, encoding="utf-8"
@@ -100,7 +106,9 @@ if __name__ == '__main__':
             print(validation_df_out_path)
             print(validation_y_fake_out_path)
             assert "validation" in validation_df_out_path
+            assert noise_percentage_folder in validation_df_out_path
             assert "validation" in validation_y_fake_out_path
+            assert noise_percentage_folder in validation_y_fake_out_path
             noisy_dataset.validation_df.to_csv(
                 path_or_buf=validation_df_out_path,
                 sep="\t", header=False, index=False, encoding="utf-8"
@@ -121,7 +129,9 @@ if __name__ == '__main__':
             print(testing_df_out_path)
             print(testing_y_fake_out_path)
             assert "testing" in testing_df_out_path
+            assert noise_percentage_folder in testing_df_out_path
             assert "testing" in testing_y_fake_out_path
+            assert noise_percentage_folder in testing_y_fake_out_path
             noisy_dataset.testing_df.to_csv(
                 path_or_buf=testing_df_out_path,
                 sep="\t", header=False, index=False, encoding="utf-8"
