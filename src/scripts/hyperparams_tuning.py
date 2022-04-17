@@ -10,6 +10,7 @@ from src.config.config import ORIGINAL, COUNTRIES, WN18RR, FB15K237, YAGO310, CO
     RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
 from src.core.pykeen_wrapper import get_train_test_validation
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
+from src.utils.cuda_info import print_cuda_info
 
 all_datasets_names = [
     FB15K237,  # "FB15K237"
@@ -83,6 +84,10 @@ if __name__ == '__main__':
     if dataset_name not in all_datasets_names:
         raise ValueError(f"Invalid dataset name '{dataset_name}'! \n"
                          f"Specify one of the following values: {all_datasets_names} \n")
+
+    # check on cuda
+    print_cuda_info()
+
     # dataset loader
     datasets_loader = TsvDatasetLoader(dataset_name=dataset_name,
                                        noise_level=ORIGINAL)
@@ -222,21 +227,21 @@ if __name__ == '__main__':
 
         # === See HPO Results === #
         print("\n\n >>>>> Study Best Result:")
+        print(hpo_pipeline_result.study.best_trial.number)
         print(hpo_pipeline_result.study.best_value)
         print(hpo_pipeline_result.study.best_params)
-        print(hpo_pipeline_result.study.best_trial)
-        print(hpo_pipeline_result.study.best_trial.number)
         print(hpo_pipeline_result.study.best_trial.datetime_start.strftime("%Y/%m/%d %H:%M:%S"))
         print(hpo_pipeline_result.study.best_trial.datetime_complete.strftime("%Y/%m/%d %H:%M:%S"))
-        print(hpo_pipeline_result.study.best_trial.user_attrs)
+        # print(hpo_pipeline_result.study.best_trial)
+        # print(hpo_pipeline_result.study.best_trial.user_attrs)
 
         print("\n\n >>>>>> Best Trials (Pareto front in the study):")
         for trial in hpo_pipeline_result.study.best_trials:
-            print(trial.number, trial.values, trial.params)
+            print("(", trial.number, trial.values, trial.params, ")")
 
         print("\n\n >>>>>> All Trials:")
         for trial in hpo_pipeline_result.study.get_trials():
-            print(trial)
+            print("(", trial.number, trial.values, trial.params, ")")
 
         # === Save Configuration and HPO results === #
         dataset_tuning_folder_path = DatasetPathFactory(

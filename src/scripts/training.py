@@ -9,7 +9,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
 from src.core.pykeen_wrapper import get_train_test_validation, train, store, load
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
-
+from src.utils.cuda_info import print_cuda_info
 
 all_datasets_names = [
     FB15K237,  # "FB15K237"
@@ -19,7 +19,6 @@ all_datasets_names = [
     CODEXSMALL,  # "CODEXSMALL"
     NATIONS,  # "NATIONS"
 ]
-
 
 valid_kge_models = [
     RESCAL,
@@ -125,6 +124,9 @@ if __name__ == '__main__':
     dataset_models_folder_path = DatasetPathFactory(dataset_name=dataset_name).get_models_folder_path()
     assert dataset_name in dataset_models_folder_path
 
+    # check on cuda
+    print_cuda_info()
+
     print(f"\n{'*' * 80}")
     print("TRAINING CONFIGURATION")
     print(f"\t\t dataset_name: {dataset_name}")
@@ -216,7 +218,6 @@ if __name__ == '__main__':
 
             # Train a new KGE model and store it on File System
             if force_training:
-
                 print("\t - Load best Hyper-parameters")
                 hyperparams_diz = get_best_hyper_parameters_diz(current_dataset_name=dataset_name,
                                                                 current_model_name=model_name)
