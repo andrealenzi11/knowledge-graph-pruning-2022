@@ -1,12 +1,14 @@
 import os
+from typing import List
 
 import numpy as np
 import pandas as pd
 import torch
 from pykeen.models.predict import predict_triples_df
+from scipy.spatial.distance import jensenshannon
 
 from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
-    ORIGINAL, NOISE_30, NOISE_10, NOISE_20, EXPERIMENT_2_DIR
+    ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100, EXPERIMENT_2_DIR
 from src.core.pykeen_wrapper import get_train_test_validation
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 from src.utils.confidence_intervals_plotting import plot_confidences_intervals
@@ -18,25 +20,80 @@ pd.set_option('display.width', 1000)
 all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS}
 print(f"all_datasets_names: {all_datasets_names}")
 
-# PRECISION_NEG = "precision_negatives"
-# PRECISION_POS = "precision_positives"
-# RECALL_NEG = "recall_negatives"
-# RECALL_POS = "recall_positives"
-# F1_NEG = "f1_negatives"
-# F1_POS = "f1_positives"
-# F1_MACRO = "f1_macro"
-# ACCURACY = "accuracy"
+all_noise_levels = {ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100, }
+print(f"all_noise_levels: {all_noise_levels}")
+
+
+def get_data_records(kg_df: pd.DataFrame, y_fake_series: pd.Series, select_only_fake_flag: bool) -> List[List[str]]:
+    assert kg_df.shape[1] == 3
+    merged_kg_fake_df = pd.concat(objs=[kg_df.reset_index(drop=True), y_fake_series],
+                                  axis=1,
+                                  verify_integrity=True,
+                                  ignore_index=True)
+    assert merged_kg_fake_df.shape[0] == kg_df.shape[0] == y_fake_series.shape[0]
+    assert merged_kg_fake_df.shape[1] == 4
+    if select_only_fake_flag:
+        fake_value = 1  # select only fake triples
+    else:
+        fake_value = 0  # select only real triples
+    result_df = merged_kg_fake_df[merged_kg_fake_df.loc[:, 3] == fake_value]
+    result_df = result_df.drop(3, axis=1).reset_index(drop=True)
+    assert result_df.shape[0] <= merged_kg_fake_df.shape[0]
+    assert result_df.shape[1] == 3
+    result_records = result_df.to_dict(orient="split")["data"]
+    assert all([len(record) == 3 for record in result_records])
+    return result_records
+
+
+def print_statistics(scores: np.ndarray,
+                     decimal_precision: int,
+                     message: str = "scores"):
+    print(f"{message}:",
+          round(np.min(a=scores), decimal_precision),
+          round(np.percentile(a=scores, q=25), decimal_precision),
+          round(np.median(a=scores), decimal_precision),
+          round(np.percentile(a=scores, q=75), decimal_precision),
+          round(np.max(a=scores), decimal_precision),
+          f"shape={scores.shape}", )
+
+
+def print_partitions_info(training_triples,
+                          training_triples_path: str,
+                          validation_triples,
+                          validation_triples_path: str,
+                          testing_triples,
+                          testing_triples_path: str):
+    # training
+    print("\n\t (*) training_triples:")
+    print(f"\t\t\t path={training_triples_path}")
+    print(f"\t\t\t #triples={training_triples.num_triples}  | "
+          f" #entities={training_triples.num_entities}  | "
+          f" #relations={training_triples.num_relations} \n")
+    # validation
+    print("\t (*) validation_triples:")
+    print(f"\t\t\t path={validation_triples_path}")
+    print(f"\t\t\t #triples={validation_triples.num_triples}  | "
+          f" #entities={validation_triples.num_entities}  | "
+          f" #relations={validation_triples.num_relations} \n")
+    # testing
+    print("\t (*) testing_triples:")
+    print(f"\t\t\t path={testing_triples_path}")
+    print(f"\t\t\t #triples={testing_triples.num_triples}  | "
+          f" #entities={testing_triples.num_entities}  | "
+          f" #relations={testing_triples.num_relations} \n")
 
 
 if __name__ == '__main__':
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
-    dataset_name: str = COUNTRIES
+    dataset_name: str = NATIONS
     force_saving_flag = True
     plot_confidence_flag = False
     use_median_flag = False
+    my_decimal_precision = 4
 
     dataset_models_folder_path = DatasetPathFactory(dataset_name=dataset_name).get_models_folder_path()
+    assert dataset_name in dataset_models_folder_path
 
     print(f"\n{'*' * 80}")
     print("PERFORMANCE TABLE GENERATION - CONFIGURATION")
@@ -44,65 +101,116 @@ if __name__ == '__main__':
     print(f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
     print(f"{'*' * 80}\n\n")
 
-    # ========== noisy 30 dataset ========== #
-    datasets_loader_30 = TsvDatasetLoader(dataset_name=dataset_name, noise_level=NOISE_30)
+    # ========== noisy 100 dataset ========== #
+    print("\n Loading Noisy 100 dataset...")
+    datasets_loader_100 = TsvDatasetLoader(dataset_name=dataset_name, noise_level=NOISE_100)
     # paths
-    training_30_path, validation_30_path, testing_30_path = \
-        datasets_loader_30.get_training_validation_testing_dfs_paths(noisy_test_flag=True)
+    training_100_path, validation_100_path, testing_100_path = \
+        datasets_loader_100.get_training_validation_testing_dfs_paths(noisy_test_flag=True)
+    assert "training" in training_100_path
+    assert NOISE_100 in training_100_path
+    assert "validation" in validation_100_path
+    assert NOISE_100 in validation_100_path
+    assert "testing" in testing_100_path
+    assert NOISE_100 in testing_100_path
     # dfs
-    training_30_df, validation_30_df, testing_30_df = \
-        datasets_loader_30.get_training_validation_testing_dfs(noisy_test_flag=True)
+    training_100_df, validation_100_df, testing_100_df = \
+        datasets_loader_100.get_training_validation_testing_dfs(noisy_test_flag=True)
+    print(testing_100_df.shape)
+    print(testing_100_df.drop_duplicates().shape)
     # y_fakes
-    training_30_y_fake, validation_30_y_fake, testing_30_y_fake = \
-        datasets_loader_30.get_training_validation_testing_y_fakes()
-    # x_test
-    testing_30_records = testing_30_df.to_dict(orient="split")["data"]
+    training_100_y_fake, validation_100_y_fake, testing_100_y_fake = \
+        datasets_loader_100.get_training_validation_testing_y_fakes()
+    # fake testing records
+    testing_100_fake_records = get_data_records(kg_df=testing_100_df,
+                                                y_fake_series=testing_100_y_fake,
+                                                select_only_fake_flag=True)
+    print(f"\t - fake records size {len(testing_100_fake_records)}")
+    assert len(testing_100_fake_records) == int(testing_100_df.shape[0] / 2)
+    # real testing records
+    testing_100_real_records = get_data_records(kg_df=testing_100_df,
+                                                y_fake_series=testing_100_y_fake,
+                                                select_only_fake_flag=False)
+    print(f"\t - real records size {len(testing_100_real_records)}")
+    assert len(testing_100_real_records) == int(testing_100_df.shape[0] / 2)
     # triples factories
-    training_30, testing_30, validation_30 = get_train_test_validation(training_set_path=training_30_path,
-                                                                       test_set_path=testing_30_path,
-                                                                       validation_set_path=validation_30_path,
-                                                                       create_inverse_triples=False)
+    training_100, testing_100, validation_100 = get_train_test_validation(training_set_path=training_100_path,
+                                                                          test_set_path=testing_100_path,
+                                                                          validation_set_path=validation_100_path,
+                                                                          create_inverse_triples=False)
+    print_partitions_info(training_triples=training_100,
+                          training_triples_path=training_100_path,
+                          validation_triples=validation_100,
+                          validation_triples_path=validation_100_path,
+                          testing_triples=testing_100,
+                          testing_triples_path=testing_100_path)
 
     # ========== original dataset ========== #
+    print("\n Loading original dataset...")
     datasets_loader_original = TsvDatasetLoader(dataset_name=dataset_name, noise_level=ORIGINAL)
     # paths
     training_original_path, validation_original_path, testing_original_path = \
         datasets_loader_original.get_training_validation_testing_dfs_paths(noisy_test_flag=False)
+    assert "training" in training_original_path
+    assert ORIGINAL in training_original_path
+    assert "validation" in validation_original_path
+    assert ORIGINAL in validation_original_path
+    assert "testing" in testing_original_path
+    assert ORIGINAL in testing_original_path
     # triples factories
     training_original, testing_original, validation_original = \
         get_train_test_validation(training_set_path=training_original_path,
                                   test_set_path=testing_original_path,
                                   validation_set_path=validation_original_path,
                                   create_inverse_triples=False)
+    print_partitions_info(training_triples=training_original,
+                          training_triples_path=training_original_path,
+                          validation_triples=validation_original,
+                          validation_triples_path=validation_original_path,
+                          testing_triples=testing_original,
+                          testing_triples_path=testing_original_path)
 
     records = []
     indexes = []
 
     for noise_level in [
         ORIGINAL,
-        # NOISE_5,
-        NOISE_10,
-        # NOISE_15,
-        NOISE_20,
-        NOISE_30,
+        # NOISE_10,
+        # NOISE_20,
+        # NOISE_30,
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
         in_folder_path = os.path.join(dataset_models_folder_path, noise_level)
+        assert dataset_name in in_folder_path
+        assert noise_level in in_folder_path
 
         datasets_loader = TsvDatasetLoader(dataset_name=dataset_name, noise_level=noise_level)
         training_path, validation_path, testing_path = \
             datasets_loader.get_training_validation_testing_dfs_paths(noisy_test_flag=True)
+        assert "training" in training_path
+        assert noise_level in training_path
+        assert "validation" in validation_path
+        assert noise_level in validation_path
+        assert "testing" in testing_path
+        assert noise_level in testing_path
 
         training, testing, validation = get_train_test_validation(training_set_path=training_path,
                                                                   test_set_path=testing_path,
                                                                   validation_set_path=validation_path,
                                                                   create_inverse_triples=False)
+        print_partitions_info(training_triples=training,
+                              training_triples_path=training_path,
+                              validation_triples=validation,
+                              validation_triples_path=validation_path,
+                              testing_triples=testing,
+                              testing_triples_path=testing_path)
         row = {}
         for model_name in sorted(os.listdir(in_folder_path)):
 
             print(f"\n >>>>> model_name: {model_name}")
             in_file = os.path.join(in_folder_path, model_name, "trained_model.pkl")
             print(in_file)
+            assert model_name in in_file
 
             # if model wa not already trained, skip to the next iteration
             if not os.path.isfile(in_file):
@@ -112,85 +220,79 @@ if __name__ == '__main__':
             # Load model from FS
             my_pykeen_model = torch.load(in_file)
 
-            # Compute KGE scores on original training set (dataset with NO noise)
+            # Compute KGE scores on original TRAINING set (dataset with NO noise)
             training_scores_tensor = my_pykeen_model.score_hrt(hrt_batch=training_original.mapped_triples, mode=None)
             training_scores_vector = training_scores_tensor.cpu().detach().numpy().reshape(-1)
             if use_median_flag:
                 training_scores_center = np.median(a=training_scores_vector)
             else:
                 training_scores_center = np.mean(a=training_scores_vector)
-            print("training scores:",
-                  f"shape={training_scores_vector.shape}",
-                  np.min(a=training_scores_vector),
-                  np.percentile(a=training_scores_vector, q=25),
-                  np.median(a=training_scores_vector),
-                  np.percentile(a=training_scores_vector, q=75),
-                  np.max(a=training_scores_vector))
+            print_statistics(scores=training_scores_vector,
+                             decimal_precision=my_decimal_precision,
+                             message="    training scores")
 
-            # Compute KGE scores on test set (dataset with 30% noise)
-            fake_scores, real_scores = [], []
-            predicted_scores, y_true = [], []
-            for record_30, y_fake_value in zip(testing_30_records, testing_30_y_fake):
-                res: pd.DataFrame = predict_triples_df(
-                    model=my_pykeen_model,
-                    triples=record_30,
-                    triples_factory=testing_30,
-                    batch_size=None,
-                    mode=None,  # "testing",
-                )
-                score = float(res["score"][0])
-                predicted_scores.append(score)
-                y_fake_value = int(y_fake_value)
-                y_true.append(y_fake_value)
-                if y_fake_value == 1:
-                    fake_scores.append(score)
-                elif y_fake_value == 0:
-                    real_scores.append(score)
-                else:
-                    raise ValueError(f"Invalid fake value '{score}'!")
-
-            # Analyze KGE scores on test set
-            # fake
-            fake_scores = np.array(fake_scores)
+            # Compute KGE scores on FAKE testing set
+            fake_pred_df: pd.DataFrame = predict_triples_df(
+                model=my_pykeen_model,
+                triples=testing_100_fake_records,
+                triples_factory=testing_100,
+                batch_size=None,
+                mode=None,  # "testing",
+            )
+            fake_scores = fake_pred_df["score"].values
             if use_median_flag:
                 fake_scores_center = float(np.median(a=fake_scores))
             else:
                 fake_scores_center = float(np.mean(a=fake_scores))
-            print("fake_scores:",
-                  f"shape={fake_scores.shape}",
-                  np.min(a=fake_scores),
-                  np.percentile(a=fake_scores, q=25),
-                  np.median(a=fake_scores),
-                  np.percentile(a=fake_scores, q=75),
-                  np.max(a=fake_scores))
 
-            # real
-            real_scores = np.array(real_scores)
+            # Compute KGE scores on REAL original testing set
+            real_pred_df: pd.DataFrame = predict_triples_df(
+                model=my_pykeen_model,
+                triples=testing_100_real_records,
+                triples_factory=testing_100,
+                batch_size=None,
+                mode=None,  # "testing",
+            )
+            real_scores = real_pred_df["score"].values
             if use_median_flag:
                 real_scores_center = float(np.median(a=real_scores))
             else:
                 real_scores_center = float(np.mean(a=real_scores))
-            print("real_scores:",
-                  f"shape={real_scores.shape}",
-                  np.min(a=real_scores),
-                  np.percentile(a=real_scores, q=25),
-                  np.median(a=real_scores),
-                  np.percentile(a=real_scores, q=75),
-                  np.max(a=real_scores))
 
-            # compute distance (greater is better)
+            # check
+            assert len(fake_scores) == len(real_scores)
+
+            # Print some scores information
+            print_statistics(scores=fake_scores,
+                             decimal_precision=my_decimal_precision,
+                             message="FAKE testing scores")
+            print_statistics(scores=real_scores,
+                             decimal_precision=my_decimal_precision,
+                             message="REAL testing scores")
+
+            # compute distance among the two distribution (greater is better)
             maximum = np.max(training_scores_vector)
             minimum = np.min(fake_scores)
             if real_scores_center > fake_scores_center:
-                distance = round(
-                    abs(real_scores_center - fake_scores_center) / abs(maximum - minimum),
-                    4)
+                distance = abs(real_scores_center - fake_scores_center) / abs(maximum - minimum)
+                distance = round(distance, my_decimal_precision)
                 row[model_name] = distance
                 print(f"distance: {distance}")
             else:
                 distance = float('inf')
                 row[model_name] = distance
                 print("WARNING: real_scores_center <= fake_scores_center")
+
+            # Compute Jensen Shannon distance (square root of the Jensen Shannon divergence)
+            js_dist = jensenshannon(real_scores, fake_scores, base=2)
+            print(f"jensen shannon Distance (base 2): {round(js_dist, my_decimal_precision)}")
+
+            # Compute Z-test (http://homework.uoregon.edu/pub/class/es202/ztest.html)
+            # Z = (mean_1 - mean_2) / sqrt{ (std1/sqrt(N1))**2 + (std2/sqrt(N2))**2 }
+            real_scores_error = (real_scores.std() / (np.sqrt(real_scores.shape[0]))) ** 2
+            fake_scores_error = (fake_scores.std() / (np.sqrt(fake_scores.shape[0]))) ** 2
+            Z_statistic = (real_scores.mean() - fake_scores.mean()) / np.sqrt(real_scores_error + fake_scores_error)
+            print(f"Z-statistic: {round(Z_statistic, my_decimal_precision)}")
 
             # plot confidence intervals
             if plot_confidence_flag:
@@ -207,7 +309,7 @@ if __name__ == '__main__':
                     percentile_min=0,
                     percentile_max=100,
                     z=1.645,  # 90%
-                    round_digits=4)
+                    round_digits=my_decimal_precision)
 
             print("\n")
 

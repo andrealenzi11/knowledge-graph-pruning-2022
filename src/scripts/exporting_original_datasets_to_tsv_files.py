@@ -73,16 +73,22 @@ if __name__ == '__main__':
                                                 id_label_map2=relations_id_label_map)
 
         # train
-        my_training_df = my_dataset_converter.get_training_df()
+        my_training_df = my_dataset_converter.get_training_df().astype(str).reset_index(drop=True)
+        my_training_df = my_training_df.drop_duplicates(keep="first").reset_index(drop=True)
         print(f"\t - training shape: {my_training_df.shape}")
+        assert my_training_df.shape[1] == 3
 
         # valid
-        my_validation_df = my_dataset_converter.get_validation_df()
+        my_validation_df = my_dataset_converter.get_validation_df().astype(str).reset_index(drop=True)
+        my_validation_df = my_validation_df.drop_duplicates(keep="first").reset_index(drop=True)
         print(f"\t - validation shape: {my_validation_df.shape}")
+        assert my_validation_df.shape[1] == 3
 
         # test
-        my_testing_df = my_dataset_converter.get_testing_df()
+        my_testing_df = my_dataset_converter.get_testing_df().astype(str).reset_index(drop=True)
+        my_testing_df = my_testing_df.drop_duplicates(keep="first").reset_index(drop=True)
         print(f"\t - testing shape: {my_testing_df.shape}")
+        assert my_testing_df.shape[1] == 3
 
         # Overview of the DF head
         print(f"\n - Training Head:\n{my_training_df.head(10)}")

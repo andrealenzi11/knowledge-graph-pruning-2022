@@ -1,16 +1,13 @@
 import os
 
-from src.config.config import FB15K237, FB15K237_DATASETS_FOLDER_PATH, \
-    WN18RR, WN18RR_DATASETS_FOLDER_PATH, \
-    YAGO310, YAGO310_DATASETS_FOLDER_PATH, \
-    COUNTRIES, COUNTRIES_DATASETS_FOLDER_PATH, \
-    CODEXSMALL, CODEXSMALL_DATASETS_FOLDER_PATH, \
-    ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, \
+from src.config.config import ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100, \
     TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
     VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
     TESTING_TSV, TESTING_Y_FAKE_TSV, \
-    RANDOM_SEED_HEAD_SAMPLING, RANDOM_SEED_RELATION_SAMPLING, RANDOM_SEED_TAIL_SAMPLING, NOISE_20, NOISE_30, NATIONS, \
-    NATIONS_DATASETS_FOLDER_PATH, NOISE_25
+    RANDOM_SEED_HEAD_SAMPLING, RANDOM_SEED_RELATION_SAMPLING, RANDOM_SEED_TAIL_SAMPLING, \
+    FB15K237, WN18RR, YAGO310, COUNTRIES, CODEXSMALL, NATIONS, \
+    FB15K237_DATASETS_FOLDER_PATH, WN18RR_DATASETS_FOLDER_PATH, YAGO310_DATASETS_FOLDER_PATH, \
+    COUNTRIES_DATASETS_FOLDER_PATH, CODEXSMALL_DATASETS_FOLDER_PATH, NATIONS_DATASETS_FOLDER_PATH
 from src.core.noise_generation import DeterministicNoiseGenerator
 from src.dao.dataset_loading import TsvDatasetLoader
 
@@ -58,13 +55,10 @@ if __name__ == '__main__':
                                                       random_state_tail=RANDOM_SEED_TAIL_SAMPLING)
 
         for noise_percentage_num, noise_percentage_folder in [
-            (1, NOISE_1),
-            (5, NOISE_5),
             (10, NOISE_10),
-            (15, NOISE_15),
             (20, NOISE_20),
-            (25, NOISE_25),
             (30, NOISE_30),
+            (100, NOISE_100),
         ]:
             print(f"\n{'-' * 80}")
             print(f"{noise_percentage_num}  |  {noise_percentage_folder}")

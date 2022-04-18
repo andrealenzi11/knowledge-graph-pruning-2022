@@ -14,7 +14,8 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
     VALIDATION_TSV, VALIDATION_Y_FAKE_TSV, \
     TESTING_TSV, TESTING_Y_FAKE_TSV, \
-    ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_30, HEAD, RELATION, TAIL
+    ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_30, NOISE_100, \
+    HEAD, RELATION, TAIL
 
 
 class BaseDatasetLoader(ABC):
@@ -118,7 +119,7 @@ class TsvDatasetLoader(BaseDatasetLoader):
                  noise_level: str):
         super().__init__(dataset_name=dataset_name)
         self.noise_level = noise_level
-        self.valid_noise_levels = {ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_30}
+        self.valid_noise_levels = {ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_30, NOISE_100}
         if self.noise_level not in self.valid_noise_levels:
             raise ValueError(f"Invalid noise_level: '{self.noise_level}'! \n"
                              f"Specify one of the following values: {self.valid_noise_levels} \n")

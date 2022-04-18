@@ -18,8 +18,8 @@ def create_non_existent_folders(root_folder_path: str, sub_folders_paths: Sequen
 
 # ==================== Random Seeds ==================== #
 RANDOM_SEED_HEAD_SAMPLING = 11
-RANDOM_SEED_RELATION_SAMPLING = 500
-RANDOM_SEED_TAIL_SAMPLING = 1200
+RANDOM_SEED_RELATION_SAMPLING = 3
+RANDOM_SEED_TAIL_SAMPLING = 1993
 # ====================================================== #
 
 # ==================== Fields Names ==================== #
@@ -66,8 +66,9 @@ NOISE_15 = "noise_15"
 NOISE_20 = "noise_20"
 NOISE_25 = "noise_25"
 NOISE_30 = "noise_30"
+NOISE_100 = "noise_100"
 
-ALL_NOISE_LEVELS = [ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_25, NOISE_30]
+ALL_NOISE_LEVELS = [ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_25, NOISE_30, NOISE_100]
 # ====================================================== #
 
 # ==================== partitions names ==================== #

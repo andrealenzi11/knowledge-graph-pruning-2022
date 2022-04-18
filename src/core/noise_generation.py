@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Optional
 
 import pandas as pd
+from numpy import random
 
 from src.config.config import HEAD, RELATION, TAIL, FAKE_FLAG, TRAINING, VALIDATION, TESTING
 from src.dao.data_model import NoisyDataset
@@ -189,18 +190,26 @@ class DeterministicNoiseGenerator(NoiseGenerator):
 
         :return: (noisy dataframe, boolean fake series)
         """
+        print(f"\n[noise_{noise_percentage}%]")
+        initial_shape = partition_df.shape
+        partition_df = partition_df.astype(str).drop_duplicates(keep="first").reset_index(drop=True)
+        assert initial_shape == partition_df.shape
 
-        # Compute anomaly df size
-        partition_original_size = partition_df.shape[0]
-        partition_sample_size = int(math.ceil(partition_original_size / 100 * noise_percentage))
-        assert partition_sample_size < partition_original_size
-        print(f"[noise_{noise_percentage}%]  |  "
-              f"{partition_name}_sample_size: {partition_sample_size}  | "
-              f"{partition_name}_original_size: {partition_original_size}")
+        # ===== Compute anomaly df size ==== #
+        if noise_percentage == 100:
+            # special case: half of positives (true triples) and half of negatives (fake synthetic triples)
+            partition_original_size = partition_df.shape[0]
+            partition_sample_size = partition_df.shape[0]
+            assert partition_sample_size == partition_original_size
+        else:
+            # normal case: positives (true triples) and a limited percentage of negatives (fake synthetic triples)
+            partition_original_size = partition_df.shape[0]
+            partition_sample_size = int(math.ceil(partition_original_size / 100 * noise_percentage))
+            assert partition_sample_size < partition_original_size
 
         print(f"\t\t original_df: {partition_df.shape}")
 
-        # Create anomaly df, by sampling from original df
+        # ===== Create anomaly df, by sampling from original df ===== #
         head_sample = self.all_df[HEAD].sample(n=partition_sample_size,
                                                replace=sampling_with_replacement_flag,
                                                random_state=self.random_state_head).values
@@ -212,7 +221,7 @@ class DeterministicNoiseGenerator(NoiseGenerator):
                                                random_state=self.random_state_tail).values
         partition_anomalies_df = pd.DataFrame(data={HEAD: head_sample,
                                                     RELATION: relation_sample,
-                                                    TAIL: tail_sample}).reset_index(drop=True)
+                                                    TAIL: tail_sample}).reset_index(drop=True).astype(str)
         print(f"\t\t anomalies_df: {partition_anomalies_df.shape}")
         assert head_sample.shape[0] == relation_sample.shape[0]
         assert head_sample.shape[0] == tail_sample.shape[0]
@@ -220,20 +229,64 @@ class DeterministicNoiseGenerator(NoiseGenerator):
         assert partition_anomalies_df.shape[0] == \
                head_sample.shape[0] == relation_sample.shape[0] == tail_sample.shape[0]
         assert partition_anomalies_df.shape[1] == 3
-        assert partition_anomalies_df.shape[0] < partition_df.shape[0]
+        if noise_percentage == 100:
+            assert partition_anomalies_df.shape[0] == partition_df.shape[0]
+        else:
+            assert partition_anomalies_df.shape[0] < partition_df.shape[0]
 
-        # Append anomaly df to the original df
-        partition_final_df = pd.concat([partition_df, partition_anomalies_df],
-                                       axis=0,
-                                       ignore_index=True,
-                                       verify_integrity=True).reset_index(drop=True)
-        print(f"\t\t final_df: {partition_final_df.shape}")
+        # ===== Manage duplicates introduced by the previous sampling ===== #
+        partition_anomalies_df = partition_anomalies_df.drop_duplicates(keep="first").reset_index(drop=True)
+        print(f"\t\t anomalies_df after drop duplicates: {partition_anomalies_df.shape}")
+        partition_anomalies_triples = {tuple(triple)
+                                       for triple in partition_anomalies_df.to_dict(orient="split")["data"]}
+        partition_original_triples = {tuple(triple)
+                                      for triple in partition_df.to_dict(orient="split")["data"]}
+        valid_anomalies_triples = partition_anomalies_triples.difference(partition_original_triples)
+        assert len(valid_anomalies_triples) <= len(partition_anomalies_triples)
+        print(f"\t\t valid_anomalies_triples after drop duplicates: {len(valid_anomalies_triples)}")
+        while len(valid_anomalies_triples) < partition_sample_size:
+            h = str(random.choice(self.all_df[HEAD].values, size=1, replace=True)[0])
+            r = str(random.choice(self.all_df[RELATION].values, size=1, replace=True)[0])
+            t = str(random.choice(self.all_df[TAIL].values, size=1, replace=True)[0])
+            if (h, r, t) in partition_original_triples:
+                continue
+            elif (h, r, t) in valid_anomalies_triples:
+                continue
+            else:
+                valid_anomalies_triples.add((h, r, t))
+        assert len(valid_anomalies_triples) == partition_sample_size
+        valid_anomalies_df = pd.DataFrame(data=list(valid_anomalies_triples),
+                                          columns=[HEAD, RELATION, TAIL]).reset_index(drop=True).astype(str)
+        print(f"\t\t valid_anomalies_df final: {valid_anomalies_df.shape}")
+        assert valid_anomalies_df.shape[0] == partition_sample_size
+        assert valid_anomalies_df.shape[1] == 3
+
+        # ===== Concatenate anomaly df to the original df (build the final df) =====
+        partition_final_df = pd.concat([
+            partition_df.reset_index(drop=True),
+            valid_anomalies_df.reset_index(drop=True)
+        ],
+            axis=0,
+            ignore_index=True,
+            verify_integrity=True).reset_index(drop=True).astype(str)
+        final_shape_1 = partition_final_df.shape
+        partition_final_df = partition_final_df.drop_duplicates(keep="first").reset_index(drop=True)
+        final_shape_2 = partition_final_df.shape
+        print(f"\t\t final_df: {final_shape_2}")
+        assert final_shape_1 == final_shape_2
+        assert final_shape_2[0] == partition_original_size + partition_sample_size
+        assert final_shape_2[1] == 3
+
+        # ===== Build the y_fake vector ===== #
         partition_fake_y = [0] * partition_original_size + [1] * partition_sample_size
         assert len(partition_fake_y) == partition_original_size + partition_sample_size
-        assert partition_final_df.shape[0] == len(partition_fake_y)
+        assert final_shape_2[0] == len(partition_fake_y)
         partition_fake_series = pd.Series(data=partition_fake_y,
                                           dtype=int,
                                           name=FAKE_FLAG)
+        assert partition_fake_series.shape[0] == final_shape_2[0]
+
+        # ===== Return (final_df, y_fake) ===== #
         return partition_final_df, partition_fake_series
 
     def generate_noisy_dataset(self, noise_percentage: int) -> NoisyDataset:
