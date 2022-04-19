@@ -17,9 +17,9 @@ def create_non_existent_folders(root_folder_path: str, sub_folders_paths: Sequen
 
 
 # ==================== Random Seeds ==================== #
-RANDOM_SEED_HEAD_SAMPLING = 11
-RANDOM_SEED_RELATION_SAMPLING = 3
-RANDOM_SEED_TAIL_SAMPLING = 1993
+RANDOM_SEED_TRAINING = (28, 2, 1995)
+RANDOM_SEED_VALIDATION = (29, 12, 1958)
+RANDOM_SEED_TESTING = (1, 5, 1000)
 # ====================================================== #
 
 # ==================== Fields Names ==================== #

@@ -1,5 +1,5 @@
 universe                = docker
-docker_image            = andrealenzi/ubucudapy:graph_pruning_study_v1.1
+docker_image            = andrealenzi/ubucudapy:graph_pruning_study_v1.2
 executable              = /usr/bin/bash
 arguments               = /info.sh
 should_transfer_files   = YES
