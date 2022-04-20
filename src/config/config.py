@@ -111,15 +111,12 @@ create_non_existent_folder(folder_path=MODELS_DIR)
 CHECKPOINTS_DIR = os.path.join(RESOURCES_DIR, "checkpoints")
 create_non_existent_folder(folder_path=CHECKPOINTS_DIR)
 
-RESULTS_DIR = os.path.join(RESOURCES_DIR, "results")
-EXPERIMENT_1_DIR = os.path.join(RESULTS_DIR, "experiment_1")
-EXPERIMENT_2_DIR = os.path.join(RESULTS_DIR, "experiment_2")
-create_non_existent_folder(folder_path=RESULTS_DIR)
-create_non_existent_folder(folder_path=EXPERIMENT_1_DIR)
-create_non_existent_folder(folder_path=EXPERIMENT_2_DIR)
-
 TUNING_DIR = os.path.join(RESOURCES_DIR, "tuning")
 create_non_existent_folder(folder_path=TUNING_DIR)
+
+RESULTS_DIR = os.path.join(RESOURCES_DIR, "results")
+create_non_existent_folder(folder_path=RESULTS_DIR)
+
 # ======================================================================= #
 
 
@@ -272,6 +269,33 @@ create_non_existent_folder(folder_path=CODEXSMALL_TUNING_FOLDER_PATH)
 # Nations sub-folder
 NATIONS_TUNING_FOLDER_PATH = os.path.join(TUNING_DIR, NATIONS)
 create_non_existent_folder(folder_path=NATIONS_TUNING_FOLDER_PATH)
+# ===================================================== #
+
+
+# ==================== Results ==================== #
+# fb15k237 sub-folder
+FB15K237_RESULTS_FOLDER_PATH = os.path.join(RESULTS_DIR, FB15K237)
+create_non_existent_folder(folder_path=FB15K237_RESULTS_FOLDER_PATH)
+
+# wn18rr sub-folder
+WN18RR_RESULTS_FOLDER_PATH = os.path.join(RESULTS_DIR, WN18RR)
+create_non_existent_folder(folder_path=WN18RR_RESULTS_FOLDER_PATH)
+
+# yago310 sub-folder
+YAGO310_RESULTS_FOLDER_PATH = os.path.join(RESULTS_DIR, YAGO310)
+create_non_existent_folder(folder_path=YAGO310_RESULTS_FOLDER_PATH)
+
+# countries sub-folder
+COUNTRIES_RESULTS_FOLDER_PATH = os.path.join(RESULTS_DIR, COUNTRIES)
+create_non_existent_folder(folder_path=COUNTRIES_RESULTS_FOLDER_PATH)
+
+# CoDExSmall sub-folder
+CODEXSMALL_RESULTS_FOLDER_PATH = os.path.join(RESULTS_DIR, CODEXSMALL)
+create_non_existent_folder(folder_path=CODEXSMALL_RESULTS_FOLDER_PATH)
+
+# Nations sub-folder
+NATIONS_RESULTS_FOLDER_PATH = os.path.join(RESULTS_DIR, NATIONS)
+create_non_existent_folder(folder_path=NATIONS_RESULTS_FOLDER_PATH)
 # ===================================================== #
 
 

@@ -7,7 +7,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     create_non_existent_folder, \
     ORIGINAL, NOISE_10, NOISE_20, NOISE_30, \
     RESCAL, TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE
-from src.core.pykeen_wrapper import get_train_test_validation, train, store, load
+from src.core.pykeen_wrapper import get_train_test_validation, train, store, load, print_partitions_info
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 from src.utils.cuda_info import print_cuda_info
 
@@ -163,23 +163,12 @@ if __name__ == '__main__':
                                                                   test_set_path=testing_path,
                                                                   validation_set_path=validation_path,
                                                                   create_inverse_triples=False)
-        print("\t (*) training:")
-        print(f"\t\t\t path={training_path}")
-        print(f"\t\t\t #triples={training.num_triples}  | "
-              f" #entities={training.num_entities}  | "
-              f" #relations={training.num_relations} \n")
-
-        print("\t (*) validation:")
-        print(f"\t\t\t path={validation_path}")
-        print(f"\t\t\t #triples={validation.num_triples}  | "
-              f" #entities={validation.num_entities}  | "
-              f" #relations={validation.num_relations} \n")
-
-        print("\t (*) testing:")
-        print(f"\t\t\t path={testing_path}")
-        print(f"\t\t\t #triples={testing.num_triples}  | "
-              f" #entities={testing.num_entities}  | "
-              f" #relations={testing.num_relations} \n")
+        print_partitions_info(training_triples=training,
+                              training_triples_path=training_path,
+                              validation_triples=validation,
+                              validation_triples_path=validation_path,
+                              testing_triples=testing,
+                              testing_triples_path=testing_path)
 
         print("\n\n>>> Start KGE models training...\n")
 

@@ -6,21 +6,36 @@ import pandas as pd
 import torch
 from pykeen.models.predict import predict_triples_df
 from scipy.spatial.distance import jensenshannon
+from sklearn import metrics
 
 from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
-    ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100, EXPERIMENT_2_DIR
-from src.core.pykeen_wrapper import get_train_test_validation
+    ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100, \
+    FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, YAGO310_RESULTS_FOLDER_PATH, \
+    COUNTRIES_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, NATIONS_RESULTS_FOLDER_PATH
+from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 from src.utils.confidence_intervals_plotting import plot_confidences_intervals
 
+# set pandas visualization options
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
+datasets_names_results_folder_map = {
+    COUNTRIES: COUNTRIES_RESULTS_FOLDER_PATH,
+    WN18RR: WN18RR_RESULTS_FOLDER_PATH,
+    FB15K237: FB15K237_RESULTS_FOLDER_PATH,
+    YAGO310: YAGO310_RESULTS_FOLDER_PATH,
+    CODEXSMALL: CODEXSMALL_RESULTS_FOLDER_PATH,
+    NATIONS: NATIONS_RESULTS_FOLDER_PATH
+}
+for k, v in datasets_names_results_folder_map.items():
+    print(f"datasets_name={k} | dataset_results_folder={v}")
+
 all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS}
 print(f"all_datasets_names: {all_datasets_names}")
 
-all_noise_levels = {ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100, }
+all_noise_levels = {ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100}
 print(f"all_noise_levels: {all_noise_levels}")
 
 
@@ -57,36 +72,10 @@ def print_statistics(scores: np.ndarray,
           f"shape={scores.shape}", )
 
 
-def print_partitions_info(training_triples,
-                          training_triples_path: str,
-                          validation_triples,
-                          validation_triples_path: str,
-                          testing_triples,
-                          testing_triples_path: str):
-    # training
-    print("\n\t (*) training_triples:")
-    print(f"\t\t\t path={training_triples_path}")
-    print(f"\t\t\t #triples={training_triples.num_triples}  | "
-          f" #entities={training_triples.num_entities}  | "
-          f" #relations={training_triples.num_relations} \n")
-    # validation
-    print("\t (*) validation_triples:")
-    print(f"\t\t\t path={validation_triples_path}")
-    print(f"\t\t\t #triples={validation_triples.num_triples}  | "
-          f" #entities={validation_triples.num_entities}  | "
-          f" #relations={validation_triples.num_relations} \n")
-    # testing
-    print("\t (*) testing_triples:")
-    print(f"\t\t\t path={testing_triples_path}")
-    print(f"\t\t\t #triples={testing_triples.num_triples}  | "
-          f" #entities={testing_triples.num_entities}  | "
-          f" #relations={testing_triples.num_relations} \n")
-
-
 if __name__ == '__main__':
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
-    dataset_name: str = NATIONS
+    dataset_name: str = CODEXSMALL
     force_saving_flag = True
     plot_confidence_flag = False
     use_median_flag = False
@@ -95,10 +84,18 @@ if __name__ == '__main__':
     dataset_models_folder_path = DatasetPathFactory(dataset_name=dataset_name).get_models_folder_path()
     assert dataset_name in dataset_models_folder_path
 
+    dataset_results_folder_path = datasets_names_results_folder_map[dataset_name]
+    assert dataset_name in dataset_results_folder_path
+
+    print("\n> Triple Classification Evaluation - Configuration")
     print(f"\n{'*' * 80}")
-    print("PERFORMANCE TABLE GENERATION - CONFIGURATION")
     print(f"\t\t dataset_name: {dataset_name}")
     print(f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
+    print(f"\t\t dataset_results_folder_path: {dataset_results_folder_path}")
+    print(f"\t\t force_saving_flag: {force_saving_flag}")
+    print(f"\t\t plot_confidence_flag: {plot_confidence_flag}")
+    print(f"\t\t use_median_flag: {use_median_flag}")
+    print(f"\t\t my_decimal_precision: {my_decimal_precision}")
     print(f"{'*' * 80}\n\n")
 
     # ========== noisy 100 dataset ========== #
@@ -175,9 +172,9 @@ if __name__ == '__main__':
 
     for noise_level in [
         ORIGINAL,
-        # NOISE_10,
-        # NOISE_20,
-        # NOISE_30,
+        NOISE_10,
+        NOISE_20,
+        NOISE_30,
     ]:
         print(f"\n\n#################### {noise_level} ####################\n")
         in_folder_path = os.path.join(dataset_models_folder_path, noise_level)
@@ -218,10 +215,11 @@ if __name__ == '__main__':
                 continue
 
             # Load model from FS
-            my_pykeen_model = torch.load(in_file)
+            my_pykeen_model = torch.load(in_file).cpu()
 
             # Compute KGE scores on original TRAINING set (dataset with NO noise)
-            training_scores_tensor = my_pykeen_model.score_hrt(hrt_batch=training_original.mapped_triples, mode=None)
+            training_scores_tensor = my_pykeen_model.score_hrt(hrt_batch=training_original.mapped_triples,
+                                                               mode=None)
             training_scores_vector = training_scores_tensor.cpu().detach().numpy().reshape(-1)
             if use_median_flag:
                 training_scores_center = np.median(a=training_scores_vector)
@@ -269,6 +267,26 @@ if __name__ == '__main__':
             print_statistics(scores=real_scores,
                              decimal_precision=my_decimal_precision,
                              message="REAL testing scores")
+
+            # compute classification metrics
+            assert real_scores_center > fake_scores_center
+            threshold = fake_scores_center + ((real_scores_center - fake_scores_center) / 2)
+            assert threshold < real_scores_center
+            assert threshold > fake_scores_center
+            print(threshold)
+            y_true = [1 for _ in real_scores] + [0 for _ in fake_scores]
+            y_pred = [1 if y >= threshold else 0 for y in real_scores] + \
+                     [1 if y >= threshold else 0 for y in fake_scores]
+            assert len(y_pred) == len(y_true)
+            assert sum(y_true) == int(len(y_true) / 2)
+            print("accuracy:",
+                  round(metrics.accuracy_score(y_true=y_true, y_pred=y_pred), my_decimal_precision))
+            print("f1:",
+                  round(metrics.f1_score(y_true=y_true, y_pred=y_pred, average="macro"), my_decimal_precision))
+            print("precision:",
+                  round(metrics.precision_score(y_true=y_true, y_pred=y_pred, average="macro"), my_decimal_precision))
+            print("recall:",
+                  round(metrics.recall_score(y_true=y_true, y_pred=y_pred, average="macro"), my_decimal_precision))
 
             # compute distance among the two distribution (greater is better)
             maximum = np.max(training_scores_vector)
@@ -322,7 +340,9 @@ if __name__ == '__main__':
     print(df_results)
 
     print("\n >>> Export DataFrame to FS...")
-    out_path = os.path.join(EXPERIMENT_2_DIR, f"{dataset_name}_results.xlsx")
+    out_path = os.path.join(dataset_results_folder_path, f"triple_classification_results.xlsx")
+    assert dataset_name in out_path
+    assert out_path.endswith("triple_classification_results.xlsx")
     print(f"\t out_path: {out_path}")
     if (os.path.isfile(out_path)) and (not force_saving_flag):
         raise OSError(f"'{out_path}' already exists!")

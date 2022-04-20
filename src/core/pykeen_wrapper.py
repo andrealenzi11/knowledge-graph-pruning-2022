@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import torch
 from pykeen.pipeline import pipeline, PipelineResult
-from pykeen.triples import TriplesFactory
+from pykeen.triples.triples_factory import TriplesFactory
 
 
 def get_train_test_validation(training_set_path: str,
@@ -45,6 +45,35 @@ def get_train_test_validation_2(knowledge_graph_path: str,
                                                      validation_fraction],
                                              random_state=random_state)
     return training, testing, validation
+
+
+def print_partitions_info(training_triples: TriplesFactory,
+                          training_triples_path: str,
+                          validation_triples: TriplesFactory,
+                          validation_triples_path: str,
+                          testing_triples: TriplesFactory,
+                          testing_triples_path: str):
+    assert "training" in training_triples_path
+    assert "validation" in validation_triples_path
+    assert "testing" in testing_triples_path
+    # training
+    print("\n\t (*) training_triples:")
+    print(f"\t\t\t path={training_triples_path}")
+    print(f"\t\t\t #triples={training_triples.num_triples}  | "
+          f" #entities={training_triples.num_entities}  | "
+          f" #relations={training_triples.num_relations} \n")
+    # validation
+    print("\t (*) validation_triples:")
+    print(f"\t\t\t path={validation_triples_path}")
+    print(f"\t\t\t #triples={validation_triples.num_triples}  | "
+          f" #entities={validation_triples.num_entities}  | "
+          f" #relations={validation_triples.num_relations} \n")
+    # testing
+    print("\t (*) testing_triples:")
+    print(f"\t\t\t path={testing_triples_path}")
+    print(f"\t\t\t #triples={testing_triples.num_triples}  | "
+          f" #entities={testing_triples.num_entities}  | "
+          f" #relations={testing_triples.num_relations} \n")
 
 
 def train(training: TriplesFactory,
