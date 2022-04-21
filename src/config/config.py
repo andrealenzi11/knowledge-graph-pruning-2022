@@ -87,6 +87,13 @@ HITS_AT_3 = "hits_at_3"  # hits_at_K=3
 HITS_AT_5 = "hits_at_5"  # hits_at_K=5
 HITS_AT_10 = "hits_at_10"  # hits_at_K=10
 
+# Triple Classification Metrics
+F1_MACRO = "f1_macro"
+F1_NEG = "f1_neg"
+F1_POS = "f1_pos"
+NORM_DIST = "norm_dist"
+Z_STAT = "z_stat"
+
 BOTH_STRATEGY = "both"
 HEAD_STRATEGY = "head"
 TAIL_STRATEGY = "tail"
