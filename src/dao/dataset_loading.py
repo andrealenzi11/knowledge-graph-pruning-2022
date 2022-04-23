@@ -1,6 +1,6 @@
 import os
 from abc import ABC
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
 import pandas as pd
 from pykeen import datasets
@@ -221,3 +221,55 @@ class TsvDatasetLoader(BaseDatasetLoader):
         if self.noise_level == ORIGINAL:
             return None
         return self.in_path_y_fake_training, self.in_path_y_fake_validation, self.in_path_y_fake_testing
+
+
+def get_data_records(kg_df: pd.DataFrame,
+                     y_fake_series: pd.Series,
+                     select_only_fake_flag: bool) -> List[Tuple[str, str, str]]:
+    """
+    Function that returns fake or true knowledge graph records
+
+    :param kg_df: Knowledge Graph DataFrame with head, relation and tail columns
+    :param y_fake_series: Series with ones that indicate fake value and zeros that indicate true values
+    :param select_only_fake_flag: boolean flag that indicate if select only fake triples or not
+
+    :return: List[List[str]]
+    [
+        ["head_1", "relation_1", "tail_1"],
+        ["head_2", "relation_2", "tail_3"],
+            .           .            .
+            .           .            .
+            .           .            .
+        ["head_N", "relation_N", "tail_N"],
+    ]
+    """
+    assert isinstance(kg_df, pd.DataFrame)
+    assert isinstance(y_fake_series, pd.Series)
+    assert isinstance(select_only_fake_flag, bool)
+    assert kg_df.shape[0] == y_fake_series.shape[0]
+    assert kg_df.shape[1] == 3
+    merged_kg_fake_df = pd.concat(objs=[kg_df.reset_index(drop=True), y_fake_series],
+                                  axis=1,
+                                  verify_integrity=True,
+                                  ignore_index=True).reset_index(drop=True)
+    assert merged_kg_fake_df.shape[0] == kg_df.shape[0]
+    assert merged_kg_fake_df.shape[0] == y_fake_series.shape[0]
+    assert merged_kg_fake_df.shape[1] == 4
+    if select_only_fake_flag:
+        value_to_select = 1  # select only fake triples
+    else:
+        value_to_select = 0  # select only real triples
+    result_df = merged_kg_fake_df[merged_kg_fake_df.loc[:, 3] == value_to_select]  # selection on rows
+    result_df = result_df.drop(3, axis=1).reset_index(drop=True)  # drop the last column
+    assert result_df.shape[0] <= merged_kg_fake_df.shape[0]
+    assert result_df.shape[1] == 3
+    result_records = result_df.to_dict(orient="split")["data"]
+    # Convert to List[Tuple[str, str, str]]
+    result_records_final = []
+    for my_record in result_records:
+        assert len(my_record) == 3
+        result_records_final.append(
+            (str(my_record[0]), str(my_record[1]), str(my_record[2]))
+        )
+    assert len(result_records_final) == len(result_records)
+    return result_records_final

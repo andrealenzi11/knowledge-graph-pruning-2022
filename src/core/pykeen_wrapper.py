@@ -1,10 +1,13 @@
 import os
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Sequence, List
 
 import numpy as np
 import pandas as pd
 import torch
+from pykeen.models.base import Model
+from pykeen.models.predict import predict_triples_df
 from pykeen.pipeline import pipeline, PipelineResult
+from pykeen.triples.triples_factory import CoreTriplesFactory
 from pykeen.triples.triples_factory import TriplesFactory
 
 
@@ -241,6 +244,15 @@ def all_prediction(model: "pykeen trained model",
     return top_k_predictions_df
 
 
-def triples_prediction(model: "pykeen trained model",
-                       triples: "indices of (h, r, t) triples.") -> np.ndarray:
-    return model.predict_scores(triples=triples)
+def get_triples_scores(trained_kge_model: Model,
+                       triples: Sequence[Tuple[str, str, str]],
+                       triples_factory: CoreTriplesFactory) -> np.ndarray:
+    pred_df = predict_triples_df(
+        model=trained_kge_model,
+        triples=triples,
+        triples_factory=triples_factory,
+        batch_size=None,
+        mode=None,  # "testing",
+    )
+    assert pred_df.shape[0] == len(triples)
+    return pred_df["score"].values

@@ -1,11 +1,8 @@
 import os
-from typing import List
 
 import numpy as np
 import pandas as pd
 import torch
-from pykeen.models.predict import predict_triples_df
-from scipy.spatial.distance import jensenshannon
 from sklearn import metrics
 
 from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
@@ -13,9 +10,11 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, YAGO310_RESULTS_FOLDER_PATH, \
     COUNTRIES_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, NATIONS_RESULTS_FOLDER_PATH, RESCAL, F1_MACRO, \
     F1_POS, F1_NEG, NORM_DIST, Z_STAT
-from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info
-from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
+from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_triples_scores
+from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader, get_data_records
 from src.utils.confidence_intervals_plotting import plot_confidences_intervals
+from src.utils.distribution_plotting import draw_violin_plot, draw_box_plot
+from src.utils.stats import get_center, print_statistics
 
 # set pandas visualization options
 pd.set_option('display.max_rows', 500)
@@ -42,68 +41,12 @@ print(f"all_noise_levels: {all_noise_levels}")
 all_metrics = {F1_MACRO, F1_POS, F1_NEG, NORM_DIST, Z_STAT}
 print(f"all_metrics: {all_metrics}")
 
-
-def get_data_records(kg_df: pd.DataFrame,
-                     y_fake_series: pd.Series,
-                     select_only_fake_flag: bool) -> List[List[str]]:
-    assert kg_df.shape[1] == 3
-    merged_kg_fake_df = pd.concat(objs=[kg_df.reset_index(drop=True), y_fake_series],
-                                  axis=1,
-                                  verify_integrity=True,
-                                  ignore_index=True)
-    assert merged_kg_fake_df.shape[0] == kg_df.shape[0] == y_fake_series.shape[0]
-    assert merged_kg_fake_df.shape[1] == 4
-    if select_only_fake_flag:
-        fake_value = 1  # select only fake triples
-    else:
-        fake_value = 0  # select only real triples
-    result_df = merged_kg_fake_df[merged_kg_fake_df.loc[:, 3] == fake_value]
-    result_df = result_df.drop(3, axis=1).reset_index(drop=True)
-    assert result_df.shape[0] <= merged_kg_fake_df.shape[0]
-    assert result_df.shape[1] == 3
-    result_records = result_df.to_dict(orient="split")["data"]
-    assert all([len(record) == 3 for record in result_records])
-    return result_records
-
-
-def print_statistics(scores: np.ndarray,
-                     decimal_precision: int,
-                     message: str = "scores"):
-    print(f"{message}:",
-          round(np.min(a=scores), decimal_precision),
-          round(np.percentile(a=scores, q=25), decimal_precision),
-          round(np.median(a=scores), decimal_precision),
-          round(np.percentile(a=scores, q=75), decimal_precision),
-          round(np.max(a=scores), decimal_precision),
-          f"shape={scores.shape}", )
-
-
-def get_scores(trained_kge_model,
-               triples,
-               triples_factory) -> np.ndarray:
-    pred_df = predict_triples_df(
-        model=trained_kge_model,
-        triples=triples,
-        triples_factory=triples_factory,
-        batch_size=None,
-        mode=None,  # "testing",
-    )
-    return pred_df["score"].values
-
-
-def get_center(scores: np.ndarray, use_median: bool) -> float:
-    if use_median:
-        return float(np.median(a=scores))
-    else:
-        return float(np.mean(a=scores))
-
-
 if __name__ == '__main__':
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
     dataset_name: str = CODEXSMALL
     force_saving_flag = True
-    plot_confidence_flag = False
+    plot_confidence_flag = True
     use_median_flag = False
     force_saving = True
     n_round = 4
@@ -282,18 +225,18 @@ if __name__ == '__main__':
 
             # ===== Inference (computation of KGE scores) on Validation Set ====== #
             # FAKE
-            fake_validation_scores = get_scores(trained_kge_model=my_pykeen_model,
-                                                triples=validation_100_fake_records,
-                                                triples_factory=validation_100)
+            fake_validation_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
+                                                        triples=validation_100_fake_records,
+                                                        triples_factory=validation_100)
             fake_validation_scores_center = get_center(scores=fake_validation_scores,
                                                        use_median=use_median_flag)
             print_statistics(scores=fake_validation_scores,
                              decimal_precision=n_round,
                              message="  FAKE validation scores")
             # REAL
-            real_validation_scores = get_scores(trained_kge_model=my_pykeen_model,
-                                                triples=validation_100_real_records,
-                                                triples_factory=validation_100)
+            real_validation_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
+                                                        triples=validation_100_real_records,
+                                                        triples_factory=validation_100)
             real_validation_scores_center = get_center(scores=real_validation_scores,
                                                        use_median=use_median_flag)
             print_statistics(scores=real_validation_scores,
@@ -303,23 +246,23 @@ if __name__ == '__main__':
 
             # ===== Inference (computation of KGE scores) on Testing Set ====== #
             # FAKE
-            fake_testing_scores = get_scores(trained_kge_model=my_pykeen_model,
-                                             triples=testing_100_fake_records,
-                                             triples_factory=testing_100)
+            fake_testing_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
+                                                     triples=testing_100_fake_records,
+                                                     triples_factory=testing_100)
             fake_testing_scores_center = get_center(scores=fake_testing_scores,
                                                     use_median=use_median_flag)
             print_statistics(scores=fake_testing_scores,
                              decimal_precision=n_round,
-                             message="    FAKE testing scores")
+                             message="     FAKE testing scores")
             # REAL
-            real_testing_scores = get_scores(trained_kge_model=my_pykeen_model,
-                                             triples=testing_100_real_records,
-                                             triples_factory=testing_100)
+            real_testing_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
+                                                     triples=testing_100_real_records,
+                                                     triples_factory=testing_100)
             real_testing_scores_center = get_center(scores=real_testing_scores,
                                                     use_median=use_median_flag)
             print_statistics(scores=real_testing_scores,
                              decimal_precision=n_round,
-                             message="    FAKE testing scores")
+                             message="     FAKE testing scores")
             assert real_testing_scores_center > fake_testing_scores_center
 
             # compute classification metrics
@@ -401,39 +344,37 @@ if __name__ == '__main__':
             # plot confidence intervals
             if plot_confidence_flag:
                 use_mean_flag = not use_median_flag
-                plot_confidences_intervals(
+                # plot_confidences_intervals(
+                #     label_values_map={
+                #         # "training": sorted(list(training_scores_vector)),
+                #         "real": sorted(list(real_testing_scores)),
+                #         "threshold": [threshold] * len(real_testing_scores),
+                #         "fake": sorted(list(fake_testing_scores)),
+                #     },
+                #     title=f"({noise_level}) {model_name}",
+                #     use_median=True,  # use_median_flag,
+                #     use_mean=False,  # use_mean_flag,
+                #     percentile_min=5,
+                #     percentile_max=95,
+                #     z=2.575,  # 1.645: 90%  |  1.96: 95%  |  2.33: 98%  |  2.575: 99%
+                #     round_digits=n_round)
+
+                title_fig = f"{model_name}_{noise_level}"
+                out_path_fig = os.path.join(dataset_results_folder_path, f"{title_fig}.png")
+                draw_box_plot(
                     label_values_map={
-                        "training": sorted(list(training_scores_vector)),
-                        "real": sorted(list(real_testing_scores)),
-                        "fake": sorted(list(fake_testing_scores)),
+                        "real": list(real_testing_scores),
+                        "threshold": threshold,
+                        "fake": list(fake_testing_scores),
                     },
-                    title=f"{model_name}",
-                    use_median=use_median_flag,
-                    use_mean=use_mean_flag,
-                    percentile_min=0,
-                    percentile_max=100,
-                    z=1.645,  # 90%
-                    round_digits=n_round)
+                    title=title_fig,
+                    orient="v",
+                    palette="Set3",
+                    show_flag=False,
+                    out_path=out_path_fig
+                )
 
             print("\n")
-
-        # records.append(row)
-        # indexes.append(noise_level)
-
-    # print("\n >>> Build DataFrame...")
-    # df_results = pd.DataFrame(data=records, index=indexes)
-    # print("\n>>> df overview:")
-    # print(df_results)
-
-    # print("\n >>> Export DataFrame to FS...")
-    # out_path = os.path.join(dataset_results_folder_path, f"triple_classification_results.xlsx")
-    # assert dataset_name in out_path
-    # assert out_path.endswith("triple_classification_results.xlsx")
-    # print(f"\t out_path: {out_path}")
-    # if (os.path.isfile(out_path)) and (not force_saving_flag):
-    #     raise OSError(f"'{out_path}' already exists!")
-    # df_results.to_excel(out_path, header=True, index=True, encoding="utf-8", engine="openpyxl")
-
 
     # Summarize and export the results after the end of iterations
     print("\n\n\n >>> Build DataFrame...")
