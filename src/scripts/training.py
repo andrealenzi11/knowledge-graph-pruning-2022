@@ -1,12 +1,14 @@
 import argparse
-import json
 import os
-from typing import Dict, Optional
+
+from pykeen.version import VERSION as PYKEEN_VERSION
+from torch.version import __version__ as torch_version
 
 from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
     create_non_existent_folder, \
     ORIGINAL, NOISE_10, NOISE_20, NOISE_30, \
     TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE, MODELS_DIR
+from src.core.hyper_configuration_parsing import get_best_hyper_parameters_diz, parse_best_hyper_parameters_diz
 from src.core.pykeen_wrapper import get_train_test_validation, train, store, load, print_partitions_info
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 from src.utils.cuda_info import print_cuda_info
@@ -22,7 +24,6 @@ all_datasets_names = [
 ]
 
 valid_kge_models = [
-    # RESCAL,
     TRANSE,
     DISTMULT,
     TRANSH,
@@ -34,64 +35,6 @@ valid_kge_models = [
     AUTOSF,
     BOXE,
 ]
-
-
-def get_best_hyper_parameters_diz(current_dataset_name: str,
-                                  current_model_name: str) -> Optional[Dict[str, float]]:
-    """
-        It tries to read from the file system the configuration with the best hyper-parameters
-        for the specified model and dataset:
-            - if therese is the json file: it returns the best configuration as a dict;
-            - Otherwise: it returns None value;
-    """
-    if current_dataset_name not in all_datasets_names:
-        raise ValueError(f"Invalid dataset name '{current_dataset_name}'!")
-    if current_model_name not in valid_kge_models:
-        raise ValueError(f"Invalid model name '{current_model_name}'!")
-    dataset_tuning_folder_path = DatasetPathFactory(dataset_name=current_dataset_name).get_tuning_folder_path()
-    assert dataset_name in dataset_tuning_folder_path
-    in_file_path = os.path.join(dataset_tuning_folder_path, f"{current_model_name}_study.json")
-    assert current_model_name in in_file_path
-    if os.path.isfile(in_file_path):
-        with open(in_file_path, 'r') as fr:
-            study_diz: dict = json.load(fr)
-            best_hyper_params_diz: dict = study_diz["best_params"]
-            assert isinstance(best_hyper_params_diz, dict)
-            # BoxE special case (bug)
-            if (current_model_name == BOXE) and ("loss.adversarial_temperature" in best_hyper_params_diz):
-                del best_hyper_params_diz["loss.adversarial_temperature"]
-            return best_hyper_params_diz
-    else:
-        return None
-
-
-def parse_best_hyper_parameters_diz(best_hyper_params_diz: Optional[Dict[str, float]]) -> Dict[str, Optional[dict]]:
-    """
-        Parse the best hyper-parameters dict and return it
-    """
-    result = {
-        "model": None,
-        "training": None,
-        "loss": None,
-        "regularizer": None,
-        "optimizer": None,
-        "negative_sampler": None,
-    }
-    if best_hyper_params_diz is None:
-        return result
-    else:
-        for h_name, h_value in best_hyper_params_diz.items():
-            arr_tmp = h_name.split(".")
-            assert len(arr_tmp) == 2
-            component, hp = arr_tmp[0].strip(), arr_tmp[1].strip()
-            assert component in result.keys()
-            if result[component] is None:
-                result[component] = {hp: h_value}
-            elif isinstance(result[component], dict):
-                result[component][hp] = h_value
-            else:
-                raise TypeError(f"Invalid type for key '{component}' in result diz!")
-        return result
 
 
 if __name__ == '__main__':
@@ -131,12 +74,13 @@ if __name__ == '__main__':
 
         # check on cuda
         print_cuda_info()
-
         print_and_write(out_file=fw_log, text=f"\n{'*' * 80}")
         print_and_write(out_file=fw_log, text="TRAINING CONFIGURATION")
         print_and_write(out_file=fw_log, text=f"\t\t dataset_name: {dataset_name}")
         print_and_write(out_file=fw_log, text=f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
         print_and_write(out_file=fw_log, text=f"\t\t force_training: {force_training}")
+        print_and_write(out_file=fw_log, text=f"\t\t pykeen version: {PYKEEN_VERSION}")
+        print_and_write(out_file=fw_log, text=f"\t\t torch version: {torch_version}")
         print_and_write(out_file=fw_log, text=f"{'*' * 80}\n\n")
 
         # === Iterate over noise levels === #
@@ -158,7 +102,7 @@ if __name__ == '__main__':
             assert noise_level in validation_path
             assert dataset_name in validation_path
             assert "testing" in testing_path
-            assert ORIGINAL in testing_path  # we test for link prediction task on the original testing set (without noise)
+            assert ORIGINAL in testing_path  # test for link prediction task on the original testing set (without noise)
             assert dataset_name in testing_path
 
             training, testing, validation = get_train_test_validation(training_set_path=training_path,
@@ -199,19 +143,22 @@ if __name__ == '__main__':
                 create_non_existent_folder(folder_path=out_folder_path)
 
                 # Try to Load an already trained KGE model from File System
-                if not force_training:
+                if force_training:
+                    force_training2 = True
+                else:
                     print_and_write(out_file=fw_log,
                                     text=f"\t - Try to loading already trained '{model_name}' model...")
                     try:
                         pipeline_result = load(in_dir_path=out_folder_path)
                         print_and_write(out_file=fw_log, text=f"\t <> '{model_name}' model loaded from File System!")
+                        force_training2 = False
                     except FileNotFoundError:
                         print_and_write(out_file=fw_log,
                                         text=f"\t <> '{model_name}' model NOT already present in the File System!")
-                        force_training = True
+                        force_training2 = True
 
                 # Train a new KGE model and store it on File System
-                if force_training:
+                if force_training2:
                     print_and_write(out_file=fw_log, text="\t - Load best Hyper-parameters")
                     hyperparams_diz = get_best_hyper_parameters_diz(current_dataset_name=dataset_name,
                                                                     current_model_name=model_name)

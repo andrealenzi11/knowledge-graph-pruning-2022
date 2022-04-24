@@ -147,13 +147,17 @@ def train(training: TriplesFactory,
         },
         evaluation_kwargs={
             "use_tqdm": True,
+            "additional_filter_triples": [
+                training.mapped_triples,
+                validation.mapped_triples,
+            ],
         },
         # misc args
         device='cuda:0',  # 'cpu'
         # random_seed=11,
         use_testing_data=True,
         evaluation_fallback=True,
-        filter_validation_when_testing=False,
+        filter_validation_when_testing=True,
         use_tqdm=True,
     )
 

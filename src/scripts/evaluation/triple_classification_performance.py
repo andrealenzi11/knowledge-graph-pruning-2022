@@ -12,8 +12,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     F1_POS, F1_NEG, NORM_DIST, Z_STAT
 from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_triples_scores
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader, get_data_records
-from src.utils.confidence_intervals_plotting import plot_confidences_intervals
-from src.utils.distribution_plotting import draw_violin_plot, draw_box_plot
+from src.utils.distribution_plotting import draw_distribution_plot
 from src.utils.stats import get_center, print_statistics
 
 # set pandas visualization options
@@ -122,7 +121,7 @@ if __name__ == '__main__':
                                                 select_only_fake_flag=False)
     print(f"\t - real testing records size {len(testing_100_real_records)}")
     assert len(testing_100_real_records) == int(testing_100_df.shape[0] / 2)
-    # triples factories
+    # triples factories for noise 100 dataset
     training_100, testing_100, validation_100 = get_train_test_validation(training_set_path=training_100_path,
                                                                           test_set_path=testing_100_path,
                                                                           validation_set_path=validation_100_path,
@@ -146,7 +145,7 @@ if __name__ == '__main__':
     assert ORIGINAL in validation_original_path
     assert "testing" in testing_original_path
     assert ORIGINAL in testing_original_path
-    # triples factories
+    # triples factories fro original dataset
     training_original, testing_original, validation_original = \
         get_train_test_validation(training_set_path=training_original_path,
                                   test_set_path=testing_original_path,
@@ -159,8 +158,7 @@ if __name__ == '__main__':
                           testing_triples=testing_original,
                           testing_triples_path=testing_original_path)
 
-    # records = []
-    # indexes = []
+    # ===== Iteration over noise levels ===== #
     records = {}
     for noise_level in [
         ORIGINAL,
@@ -193,6 +191,8 @@ if __name__ == '__main__':
                               validation_triples_path=validation_path,
                               testing_triples=testing,
                               testing_triples_path=testing_path)
+
+        # ===== Iteration over KGE models ===== #
         row = {}
         for model_name in sorted(os.listdir(in_folder_path)):
 
@@ -208,6 +208,7 @@ if __name__ == '__main__':
                 print("model not present! \n")
                 continue
 
+            # Skip Not valid models
             if model_name == RESCAL:
                 continue
 
@@ -242,7 +243,10 @@ if __name__ == '__main__':
             print_statistics(scores=real_validation_scores,
                              decimal_precision=n_round,
                              message="  REAL validation scores")
+            # checks on validation scores
+            assert fake_validation_scores.shape[0] == real_validation_scores.shape[0]
             assert real_validation_scores_center > fake_validation_scores_center
+            assert training_scores_center > fake_validation_scores_center
 
             # ===== Inference (computation of KGE scores) on Testing Set ====== #
             # FAKE
@@ -263,12 +267,16 @@ if __name__ == '__main__':
             print_statistics(scores=real_testing_scores,
                              decimal_precision=n_round,
                              message="     FAKE testing scores")
+            # check on testing scores
+            assert fake_testing_scores.shape[0] == real_testing_scores.shape[0]
             assert real_testing_scores_center > fake_testing_scores_center
+            assert training_scores_center > fake_testing_scores_center
 
             # compute classification metrics
             threshold = \
                 fake_validation_scores_center + ((real_validation_scores_center - fake_validation_scores_center) / 2)
-            print(threshold)
+            print(f"classification threshold: {threshold}")
+            assert threshold < training_scores_center
             assert threshold < real_validation_scores_center
             assert threshold < real_testing_scores_center
             assert threshold > fake_validation_scores_center
@@ -276,8 +284,12 @@ if __name__ == '__main__':
             y_true = [1 for _ in real_testing_scores] + [0 for _ in fake_testing_scores]
             y_pred = [1 if y >= threshold else 0 for y in real_testing_scores] + \
                      [1 if y >= threshold else 0 for y in fake_testing_scores]
+            print(y_true)
+            print(y_pred)
             assert len(y_pred) == len(y_true)
             assert sum(y_true) == int(len(y_true) / 2)
+            assert sum(y_pred) <= len(y_true)
+            assert sum(y_pred) >= 0
             accuracy = round(metrics.accuracy_score(y_true=y_true, y_pred=y_pred), n_round)
             print("accuracy:", accuracy)
             f1_macro = round(metrics.f1_score(y_true=y_true, y_pred=y_pred, average="macro"), n_round)
@@ -303,10 +315,6 @@ if __name__ == '__main__':
                 distance = float('inf')
                 row[model_name] = distance
                 print("WARNING: real_testing_scores_center <= fake_testing_scores_center")
-
-            # Compute Jensen Shannon distance (square root of the Jensen Shannon divergence)
-            # js_dist = jensenshannon(real_testing_scores, fake_testing_scores, base=2)
-            # print(f"jensen shannon Distance (base 2): {round(js_dist, n_round)}")
 
             # Compute Z-test (http://homework.uoregon.edu/pub/class/es202/ztest.html)
             # Z = (mean_1 - mean_2) / sqrt{ (std1/sqrt(N1))**2 + (std2/sqrt(N2))**2 }
@@ -343,25 +351,9 @@ if __name__ == '__main__':
 
             # plot confidence intervals
             if plot_confidence_flag:
-                use_mean_flag = not use_median_flag
-                # plot_confidences_intervals(
-                #     label_values_map={
-                #         # "training": sorted(list(training_scores_vector)),
-                #         "real": sorted(list(real_testing_scores)),
-                #         "threshold": [threshold] * len(real_testing_scores),
-                #         "fake": sorted(list(fake_testing_scores)),
-                #     },
-                #     title=f"({noise_level}) {model_name}",
-                #     use_median=True,  # use_median_flag,
-                #     use_mean=False,  # use_mean_flag,
-                #     percentile_min=5,
-                #     percentile_max=95,
-                #     z=2.575,  # 1.645: 90%  |  1.96: 95%  |  2.33: 98%  |  2.575: 99%
-                #     round_digits=n_round)
-
                 title_fig = f"{model_name}_{noise_level}"
                 out_path_fig = os.path.join(dataset_results_folder_path, f"{title_fig}.png")
-                draw_box_plot(
+                draw_distribution_plot(
                     label_values_map={
                         "real": list(real_testing_scores),
                         "threshold": threshold,

@@ -5,6 +5,8 @@ import os
 from optuna.pruners import PercentilePruner
 from optuna.samplers import TPESampler
 from pykeen.hpo import hpo_pipeline
+from pykeen.version import VERSION as PYKEEN_VERSION
+from torch.version import __version__ as torch_version
 
 from src.config.config import ORIGINAL, COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS, \
     TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE, TUNING_DIR
@@ -23,7 +25,6 @@ all_datasets_names = [
 ]
 
 valid_kge_models = [
-    # RESCAL,
     TRANSE,
     DISTMULT,
     TRANSH,
@@ -83,6 +84,8 @@ if __name__ == '__main__':
             assert num_startup_trials_pruner == num_startup_trials_sampler
             assert num_startup_trials_pruner < num_trials_sampler
         print_and_write(out_file=fw_log, text=f"num_startup_trials_pruner: {num_startup_trials_pruner}")
+        print_and_write(out_file=fw_log, text=f"pykeen version: {PYKEEN_VERSION}")
+        print_and_write(out_file=fw_log, text=f"torch version: {torch_version}")
 
         # === Get Input Dataset: Training, Validation, Testing === #
         # check on input datset
@@ -193,13 +196,17 @@ if __name__ == '__main__':
                 evaluator="RankBasedEvaluator",
                 evaluation_kwargs={
                     "use_tqdm": True,
+                    "additional_filter_triples": [
+                        training.mapped_triples,
+                        validation.mapped_triples,
+                    ],
                 },
                 evaluator_kwargs={
                     "filtered": True,
                     # "batch_size": 128,
                 },
                 metric="both.realistic.inverse_harmonic_mean_rank",  # MRR
-                filter_validation_when_testing=False,
+                filter_validation_when_testing=True,
                 # misc args
                 device=configuration["device"],
                 # Optuna study args
