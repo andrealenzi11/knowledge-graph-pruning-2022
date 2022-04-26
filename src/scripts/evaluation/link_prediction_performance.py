@@ -48,7 +48,7 @@ print(f"all_strategies_2: {all_strategies_2}")
 if __name__ == '__main__':
 
     # ===== Link Prediction Evaluation - Configuration ===== #
-    dataset_name: str = CODEXSMALL   # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
+    dataset_name: str = WN18RR   # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
     load_precomputed_results_flag = False
     force_inference = True
     force_saving = True

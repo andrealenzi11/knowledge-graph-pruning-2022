@@ -13,7 +13,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
 from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_triples_scores
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader, get_data_records
 from src.utils.distribution_plotting import draw_distribution_plot
-from src.utils.stats import get_center, print_statistics
+from src.utils.stats import get_center, print_2d_statistics, print_1d_statistics
 
 # set pandas visualization options
 pd.set_option('display.max_rows', 500)
@@ -43,7 +43,7 @@ print(f"all_metrics: {all_metrics}")
 if __name__ == '__main__':
 
     # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
-    dataset_name: str = CODEXSMALL
+    dataset_name: str = WN18RR
     force_saving_flag = True
     plot_confidence_flag = True
     use_median_flag = False
@@ -220,9 +220,6 @@ if __name__ == '__main__':
                                                                mode=None)
             training_scores_vector = training_scores_tensor.cpu().detach().numpy().reshape(-1)
             training_scores_center = get_center(scores=training_scores_vector, use_median=use_median_flag)
-            print_statistics(scores=training_scores_vector,
-                             decimal_precision=n_round,
-                             message="original training scores")
 
             # ===== Inference (computation of KGE scores) on Validation Set ====== #
             # FAKE
@@ -231,18 +228,12 @@ if __name__ == '__main__':
                                                         triples_factory=validation_100)
             fake_validation_scores_center = get_center(scores=fake_validation_scores,
                                                        use_median=use_median_flag)
-            print_statistics(scores=fake_validation_scores,
-                             decimal_precision=n_round,
-                             message="  FAKE validation scores")
             # REAL
             real_validation_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
                                                         triples=validation_100_real_records,
                                                         triples_factory=validation_100)
             real_validation_scores_center = get_center(scores=real_validation_scores,
                                                        use_median=use_median_flag)
-            print_statistics(scores=real_validation_scores,
-                             decimal_precision=n_round,
-                             message="  REAL validation scores")
             # checks on validation scores
             assert fake_validation_scores.shape[0] == real_validation_scores.shape[0]
             assert real_validation_scores_center > fake_validation_scores_center
@@ -255,18 +246,30 @@ if __name__ == '__main__':
                                                      triples_factory=testing_100)
             fake_testing_scores_center = get_center(scores=fake_testing_scores,
                                                     use_median=use_median_flag)
-            print_statistics(scores=fake_testing_scores,
-                             decimal_precision=n_round,
-                             message="     FAKE testing scores")
             # REAL
             real_testing_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
                                                      triples=testing_100_real_records,
                                                      triples_factory=testing_100)
             real_testing_scores_center = get_center(scores=real_testing_scores,
                                                     use_median=use_median_flag)
-            print_statistics(scores=real_testing_scores,
-                             decimal_precision=n_round,
-                             message="     FAKE testing scores")
+
+            # print statistics
+            print_2d_statistics(scores_matrix=[
+                    training_scores_vector,
+                    real_validation_scores,
+                    real_testing_scores,
+                    fake_validation_scores,
+                    fake_testing_scores,
+                ],
+                labels=[
+                    "original training scores",
+                    "REAL validation scores",
+                    "REAL testing scores",
+                    "FAKE validation scores",
+                    "FAKE testing scores",
+                ],
+                decimal_precision=n_round)
+
             # check on testing scores
             assert fake_testing_scores.shape[0] == real_testing_scores.shape[0]
             assert real_testing_scores_center > fake_testing_scores_center
