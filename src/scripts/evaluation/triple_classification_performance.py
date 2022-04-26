@@ -1,3 +1,4 @@
+import configparser
 import os
 
 import numpy as np
@@ -13,7 +14,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
 from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_triples_scores
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader, get_data_records
 from src.utils.distribution_plotting import draw_distribution_plot
-from src.utils.stats import get_center, print_2d_statistics, print_1d_statistics
+from src.utils.stats import get_center, print_2d_statistics
 
 # set pandas visualization options
 pd.set_option('display.max_rows', 500)
@@ -42,8 +43,12 @@ print(f"all_metrics: {all_metrics}")
 
 if __name__ == '__main__':
 
-    # Specify a Valid option: COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
-    dataset_name: str = WN18RR
+    config = configparser.ConfigParser()
+    if not os.path.isfile('dataset_local.ini'):
+        raise FileNotFoundError("Create your 'dataset_local.ini' file in the 'src.scripts.evaluation' package "
+                                "starting from the 'dataset.ini' template!")
+    config.read('dataset_local.ini')
+    dataset_name = config['dataset_info']['dataset_name']
     force_saving_flag = True
     plot_confidence_flag = True
     use_median_flag = False
@@ -255,12 +260,12 @@ if __name__ == '__main__':
 
             # print statistics
             print_2d_statistics(scores_matrix=[
-                    training_scores_vector,
-                    real_validation_scores,
-                    real_testing_scores,
-                    fake_validation_scores,
-                    fake_testing_scores,
-                ],
+                training_scores_vector,
+                real_validation_scores,
+                real_testing_scores,
+                fake_validation_scores,
+                fake_testing_scores,
+            ],
                 labels=[
                     "original training scores",
                     "REAL validation scores",

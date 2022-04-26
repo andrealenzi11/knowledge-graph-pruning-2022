@@ -1,3 +1,4 @@
+import configparser
 import json
 import os
 
@@ -44,11 +45,15 @@ print(f"all_strategies_1: {all_strategies_1}")
 all_strategies_2 = {REALISTIC_STRATEGY, OPTIMISTIC_STRATEGY, PESSIMISTIC_STRATEGY}
 print(f"all_strategies_2: {all_strategies_2}")
 
-
 if __name__ == '__main__':
 
     # ===== Link Prediction Evaluation - Configuration ===== #
-    dataset_name: str = WN18RR   # COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS
+    config = configparser.ConfigParser()
+    if not os.path.isfile('dataset_local.ini'):
+        raise FileNotFoundError("Create your 'dataset_local.ini' file in the 'src.scripts.evaluation' package "
+                                "starting from the 'dataset.ini' template!")
+    config.read('dataset_local.ini')
+    dataset_name = config['dataset_info']['dataset_name']
     load_precomputed_results_flag = False
     force_inference = True
     force_saving = True
