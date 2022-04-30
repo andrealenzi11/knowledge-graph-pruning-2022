@@ -11,7 +11,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
 from src.core.hyper_configuration_parsing import get_best_hyper_parameters_diz, parse_best_hyper_parameters_diz
 from src.core.pykeen_wrapper import get_train_test_validation, train, store, load, print_partitions_info
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
-from src.utils.cuda_info import print_cuda_info
+from src.utils.cuda_info import get_cuda_info
 from src.utils.printing import print_and_write
 
 all_datasets_names = [
@@ -35,7 +35,6 @@ valid_kge_models = [
     AUTOSF,
     BOXE,
 ]
-
 
 if __name__ == '__main__':
 
@@ -73,7 +72,9 @@ if __name__ == '__main__':
         assert dataset_name in dataset_models_folder_path
 
         # check on cuda
-        print_cuda_info()
+        print_and_write(out_file=fw_log, text=f"{get_cuda_info()}")
+
+        # print configuration
         print_and_write(out_file=fw_log, text=f"\n{'*' * 80}")
         print_and_write(out_file=fw_log, text="TRAINING CONFIGURATION")
         print_and_write(out_file=fw_log, text=f"\t\t dataset_name: {dataset_name}")
@@ -159,6 +160,7 @@ if __name__ == '__main__':
 
                 # Train a new KGE model and store it on File System
                 if force_training2:
+
                     print_and_write(out_file=fw_log, text="\t - Load best Hyper-parameters")
                     hyperparams_diz = get_best_hyper_parameters_diz(current_dataset_name=dataset_name,
                                                                     current_model_name=model_name)
@@ -166,11 +168,34 @@ if __name__ == '__main__':
                     kwargs_diz = parse_best_hyper_parameters_diz(best_hyper_params_diz=hyperparams_diz)
                     print_and_write(out_file=fw_log, text=f"\t\t <> parsed hyper-parameters: {kwargs_diz}")
 
-                    print_and_write(out_file=fw_log, text=f"\t - Training '{model_name}' model...")
+                    if model_name == CONVE:
+                        print_and_write(out_file=fw_log,
+                                        text=f"\t - Load datasets with inverse triples for ConvE...")
+                        current_training, current_testing, current_validation = get_train_test_validation(
+                            training_set_path=training_path,
+                            test_set_path=testing_path,
+                            validation_set_path=validation_path,
+                            create_inverse_triples=True)
+                    else:
+                        current_training, current_testing, current_validation = \
+                            training, testing, validation
+
+                    print_and_write(out_file=fw_log,
+                                    text=f"\t - #triples: ("
+                                         f"training={current_training.num_triples}, "
+                                         f"testing={current_testing.num_triples}, "
+                                         f"validation={current_validation.num_triples}) | "
+                                         f"inverse=("
+                                         f"{current_training.create_inverse_triples}, "
+                                         f"{current_testing.create_inverse_triples}, "
+                                         f"{current_validation.create_inverse_triples}) | "
+                                         f"noise={noise_level}")
+                    print_and_write(out_file=fw_log,
+                                    text=f"\t - Training '{model_name}' model...")
                     pipeline_result = train(
-                        training=training,
-                        testing=testing,
-                        validation=validation,
+                        training=current_training,
+                        testing=current_testing,
+                        validation=current_validation,
                         model_name=model_name,
                         model_kwargs=kwargs_diz["model"],
                         training_kwargs=kwargs_diz["training"],
@@ -180,12 +205,20 @@ if __name__ == '__main__':
                         negative_sampler_kwargs=kwargs_diz["negative_sampler"],
                     )
 
-                    print_and_write(out_file=fw_log, text=f"- Saving '{model_name}' model......")
+                    print_and_write(out_file=fw_log, text=f"\t - Saving '{model_name}' model......")
                     store(result_model=pipeline_result,
                           out_dir_path=out_folder_path)
+                    del current_training, current_testing, current_validation, hyperparams_diz, kwargs_diz
 
-                print_and_write(out_file=fw_log, text=f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
+                # conclude models iteration
+                del model_name, year, out_folder_path, force_training2, pipeline_result
+                print_and_write(out_file=fw_log,
+                                text=f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
 
-            print_and_write(out_file=fw_log, text=f"\n###########################################################\n")
+            # conclude noises iteration
+            del datasets_loader, training_path, validation_path, testing_path, training, validation, testing
+            print_and_write(out_file=fw_log,
+                            text=f"\n###########################################################\n")
 
+        # exit (conclude script)
         print_and_write(out_file=fw_log, text="EXIT 0")

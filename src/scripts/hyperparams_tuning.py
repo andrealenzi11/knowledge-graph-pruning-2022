@@ -12,7 +12,7 @@ from src.config.config import ORIGINAL, COUNTRIES, WN18RR, FB15K237, YAGO310, CO
     TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE, TUNING_DIR
 from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
-from src.utils.cuda_info import print_cuda_info
+from src.utils.cuda_info import get_cuda_info
 from src.utils.printing import print_and_write
 
 all_datasets_names = [
@@ -94,7 +94,7 @@ if __name__ == '__main__':
                              f"Specify one of the following values: {all_datasets_names} \n")
 
         # check on cuda
-        print_cuda_info()
+        print_and_write(out_file=fw_log, text=f"{get_cuda_info()}")
 
         # dataset loader
         datasets_loader = TsvDatasetLoader(dataset_name=dataset_name,
@@ -266,6 +266,9 @@ if __name__ == '__main__':
                 json.dump(obj=output_diz, fp=outfile,
                           ensure_ascii=True, check_circular=True, allow_nan=True, indent=4)
 
+            # conclude models iteration
+            del kge_model_name, negative_sampler_kwargs, configuration, \
+                hpo_pipeline_result, dataset_tuning_folder_path, out_file_path, output_diz
             print_and_write(out_file=fw_log, text=f"{'#' * 80} \n")
 
         print_and_write(out_file=fw_log, text="EXIT 0")
