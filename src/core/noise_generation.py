@@ -6,7 +6,7 @@ import pandas as pd
 from numpy import random
 
 from src.config.config import HEAD, RELATION, TAIL, FAKE_FLAG, TRAINING, VALIDATION, TESTING
-from src.dao.data_model import NoisyDataset
+from src.dao.data_model import NoisyDataset, RandomDataset
 
 
 # from sdv.tabular import CTGAN
@@ -211,7 +211,7 @@ class DeterministicNoiseGenerator(NoiseGenerator):
                         random_state_relation: int,
                         random_state_tail: int) -> Tuple[pd.DataFrame, pd.Series]:
         """
-        Generate a nosy dataframe;
+        Generate a noisy dataframe;
 
         :param noise_percentage: (*int*) percentage number [0, 100]
         :param partition_name: (*str*) "training" | "validation" | "testing"
@@ -368,3 +368,105 @@ class DeterministicNoiseGenerator(NoiseGenerator):
                             validation_y_fake=validation_y_fake,
                             testing_df=testing_final_df,
                             testing_y_fake=testing_y_fake)
+
+    def _generate_random(self,
+                         partition_name: str,
+                         partition_df: pd.DataFrame,
+                         sampling_with_replacement_flag: bool,
+                         random_state_head: int,
+                         random_state_relation: int,
+                         random_state_tail: int) -> Tuple[pd.DataFrame, pd.Series]:
+        """
+        Generate a random dataframe;
+
+        :param partition_name: (*str*) "training" | "validation" | "testing"
+        :param partition_df: (*pd.DataFrame*) input dataframe with triples from which generate random dataset
+        :param sampling_with_replacement_flag: (*bool*) boolean flag that indicate the sampling strategy.
+                - True ==> the same element x could be sampled more times (es. from [1,2,3,4,5] we can sample 2,2,5,5)
+                - False ==> once sampled an element x, we never resample x (es. from [1,2,3,4,5] we can sample 2,3,5,1)
+
+        :return: (random dataframe, boolean fake series)
+        """
+        print(partition_name)
+        assert random_state_head != random_state_relation
+        assert random_state_relation != random_state_tail
+        assert random_state_head != random_state_relation
+
+        initial_shape = partition_df.shape
+        partition_df = partition_df.astype(str).drop_duplicates(keep="first").reset_index(drop=True)
+        assert initial_shape == partition_df.shape
+        partition_original_size = partition_df.shape[0]
+
+        # ===== Create random df, by sampling from original df ===== #
+        head_sample = self.all_df[HEAD].sample(n=partition_original_size,
+                                               replace=sampling_with_replacement_flag,
+                                               random_state=random_state_head).values
+        relation_sample = self.all_df[RELATION].sample(n=partition_original_size,
+                                                       replace=sampling_with_replacement_flag,
+                                                       random_state=random_state_relation).values
+        tail_sample = self.all_df[TAIL].sample(n=partition_original_size,
+                                               replace=sampling_with_replacement_flag,
+                                               random_state=random_state_tail).values
+        random_df = pd.DataFrame(data={HEAD: head_sample,
+                                       RELATION: relation_sample,
+                                       TAIL: tail_sample}).reset_index(drop=True).astype(str)
+        print(f"\t\t random_df size : {random_df.shape}")
+        assert head_sample.shape[0] == partition_original_size
+        assert relation_sample.shape[0] == partition_original_size
+        assert tail_sample.shape[0] == partition_original_size
+        assert random_df.shape[0] == partition_original_size
+
+        # ===== Manage duplicates introduced by the previous sampling ===== #
+        random_df = random_df.drop_duplicates(keep="first").reset_index(drop=True)
+        print(f"\t\t random_df size after drop duplicates: {random_df.shape}")
+
+        # ===== Create Random fake y vector ===== #
+        random_y = pd.Series(data=[1 for _ in range(0, random_df.shape[0])],
+                             dtype=int,
+                             name=FAKE_FLAG)
+        assert random_y.shape[0] == random_df.shape[0]
+
+        # ===== Return (final_df, y_fake) ===== #
+        return random_df, random_y
+
+    def generate_random_dataset(self) -> RandomDataset:
+        # training
+        training_final_df, training_y_fake = self._generate_random(
+            partition_name=TRAINING,
+            partition_df=self.training_df,
+            sampling_with_replacement_flag=True,
+            random_state_head=self.random_states_training[0],
+            random_state_relation=self.random_states_training[1],
+            random_state_tail=self.random_states_training[2],
+        )
+        assert training_final_df.shape[0] == training_y_fake.shape[0]
+        assert training_final_df.shape[1] == 3
+        # validation
+        validation_final_df, validation_y_fake = self._generate_random(
+            partition_name=VALIDATION,
+            partition_df=self.validation_df,
+            sampling_with_replacement_flag=False,
+            random_state_head=self.random_states_validation[0],
+            random_state_relation=self.random_states_validation[1],
+            random_state_tail=self.random_states_validation[2],
+        )
+        assert validation_final_df.shape[0] == validation_y_fake.shape[0]
+        assert validation_final_df.shape[1] == 3
+        # testing
+        testing_final_df, testing_y_fake = self._generate_random(
+            partition_name=TESTING,
+            partition_df=self.testing_df,
+            sampling_with_replacement_flag=False,
+            random_state_head=self.random_states_testing[0],
+            random_state_relation=self.random_states_testing[1],
+            random_state_tail=self.random_states_testing[2],
+        )
+        assert testing_final_df.shape[0] == testing_y_fake.shape[0]
+        assert testing_final_df.shape[1] == 3
+        # Return the obtained NoisyDataset object
+        return RandomDataset(training_df=training_final_df,
+                             training_y_fake=training_y_fake,
+                             validation_df=validation_final_df,
+                             validation_y_fake=validation_y_fake,
+                             testing_df=testing_final_df,
+                             testing_y_fake=testing_y_fake)

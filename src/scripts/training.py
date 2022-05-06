@@ -7,7 +7,7 @@ from torch.version import __version__ as torch_version
 from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
     create_non_existent_folder, \
     ORIGINAL, NOISE_10, NOISE_20, NOISE_30, \
-    TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE, MODELS_DIR
+    TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE, MODELS_DIR, TOTAL_RANDOM
 from src.core.hyper_configuration_parsing import get_best_hyper_parameters_diz, parse_best_hyper_parameters_diz
 from src.core.pykeen_wrapper import get_train_test_validation, train, store, load, print_partitions_info
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
@@ -86,10 +86,11 @@ if __name__ == '__main__':
 
         # === Iterate over noise levels === #
         for noise_level in [
-            ORIGINAL,
-            NOISE_10,
-            NOISE_20,
-            NOISE_30,
+            # ORIGINAL,
+            TOTAL_RANDOM,
+            # NOISE_10,
+            # NOISE_20,
+            # NOISE_30,
         ]:
             print_and_write(out_file=fw_log, text=f"\n\n#################### {noise_level} ####################\n")
             datasets_loader = TsvDatasetLoader(dataset_name=dataset_name, noise_level=noise_level)

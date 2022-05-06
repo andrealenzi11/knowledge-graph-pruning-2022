@@ -59,6 +59,7 @@ NATIONS = "NATIONS"
 
 # ==================== Noise Levels ==================== #
 ORIGINAL = "original"
+TOTAL_RANDOM = "random"
 NOISE_1 = "noise_1"
 NOISE_5 = "noise_5"
 NOISE_10 = "noise_10"
@@ -68,7 +69,7 @@ NOISE_25 = "noise_25"
 NOISE_30 = "noise_30"
 NOISE_100 = "noise_100"
 
-ALL_NOISE_LEVELS = [ORIGINAL, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_25, NOISE_30, NOISE_100]
+ALL_NOISE_LEVELS = [ORIGINAL, TOTAL_RANDOM, NOISE_1, NOISE_5, NOISE_10, NOISE_15, NOISE_20, NOISE_25, NOISE_30, NOISE_100]
 # ====================================================== #
 
 # ==================== partitions names ==================== #

@@ -13,7 +13,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     REALISTIC_STRATEGY, OPTIMISTIC_STRATEGY, PESSIMISTIC_STRATEGY, \
     ORIGINAL, NOISE_10, NOISE_20, NOISE_30, RESCAL, CONVE, \
     FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, YAGO310_RESULTS_FOLDER_PATH, \
-    COUNTRIES_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, NATIONS_RESULTS_FOLDER_PATH
+    COUNTRIES_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, NATIONS_RESULTS_FOLDER_PATH, TOTAL_RANDOM
 from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 
@@ -33,7 +33,7 @@ datasets_names_results_folder_map = {
 for k, v in datasets_names_results_folder_map.items():
     print(f"datasets_name={k} | dataset_results_folder={v}")
 
-all_noise_levels = {ORIGINAL, NOISE_10, NOISE_20, NOISE_30}
+all_noise_levels = {ORIGINAL, TOTAL_RANDOM, NOISE_10, NOISE_20, NOISE_30}
 print(f"all_noise_levels: {all_noise_levels}")
 
 all_metrics = {MR, MRR, HITS_AT_1, HITS_AT_3, HITS_AT_5, HITS_AT_10}
@@ -54,12 +54,12 @@ if __name__ == '__main__':
                                 "starting from the 'dataset.ini' template!")
     config.read('dataset_local.ini')
     dataset_name = config['dataset_info']['dataset_name']
-    load_precomputed_results_flag = False
+    load_precomputed_results_flag = True
     force_inference = True
     force_saving = True
     strategy1: str = BOTH_STRATEGY  # "both" | "head" | "tail"
     strategy2: str = REALISTIC_STRATEGY  # "realistic" | "optimistic" | "pessimistic"
-    device = torch.device("cuda:0")
+    device = "cpu"  # torch.device("cuda:0")
     selected_metrics = {
         MR,
         MRR,
@@ -127,6 +127,7 @@ if __name__ == '__main__':
     # Iteration over noise levels
     records = {}
     for noise_level in [
+        TOTAL_RANDOM,
         ORIGINAL,
         NOISE_10,
         NOISE_20,
@@ -290,7 +291,7 @@ if __name__ == '__main__':
     df_results = df_results.sort_index(inplace=False, axis=0, ascending=True)
     diz_results_records = df_results.to_dict(orient="records")
     diz_results_index = list(df_results.index.values)
-    step = 4
+    step = 5
     i = 0
     new_records = []
     new_index = []

@@ -10,7 +10,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100, \
     FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, YAGO310_RESULTS_FOLDER_PATH, \
     COUNTRIES_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, NATIONS_RESULTS_FOLDER_PATH, RESCAL, F1_MACRO, \
-    F1_POS, F1_NEG, NORM_DIST, Z_STAT
+    F1_POS, F1_NEG, NORM_DIST, Z_STAT, TOTAL_RANDOM
 from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_triples_scores
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader, get_data_records
 from src.utils.distribution_plotting import draw_distribution_plot
@@ -35,7 +35,7 @@ for k, v in datasets_names_results_folder_map.items():
 all_datasets_names = {COUNTRIES, WN18RR, FB15K237, YAGO310, CODEXSMALL, NATIONS}
 print(f"all_datasets_names: {all_datasets_names}")
 
-all_noise_levels = {ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100}
+all_noise_levels = {ORIGINAL, TOTAL_RANDOM, NOISE_10, NOISE_20, NOISE_30, NOISE_100}
 print(f"all_noise_levels: {all_noise_levels}")
 
 all_metrics = {F1_MACRO, F1_POS, F1_NEG, NORM_DIST, Z_STAT}
@@ -166,6 +166,7 @@ if __name__ == '__main__':
     # ===== Iteration over noise levels ===== #
     records = {}
     for noise_level in [
+        TOTAL_RANDOM,
         ORIGINAL,
         NOISE_10,
         NOISE_20,
