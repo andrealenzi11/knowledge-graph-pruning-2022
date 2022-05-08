@@ -387,7 +387,7 @@ class DeterministicNoiseGenerator(NoiseGenerator):
 
         :return: (random dataframe, boolean fake series)
         """
-        print(partition_name)
+        print(f"\n{partition_name}")
         assert random_state_head != random_state_relation
         assert random_state_relation != random_state_tail
         assert random_state_head != random_state_relation
@@ -410,15 +410,15 @@ class DeterministicNoiseGenerator(NoiseGenerator):
         random_df = pd.DataFrame(data={HEAD: head_sample,
                                        RELATION: relation_sample,
                                        TAIL: tail_sample}).reset_index(drop=True).astype(str)
-        print(f"\t\t random_df size : {random_df.shape}")
+        print(f"\t\t {partition_name} random_df size : {random_df.shape}")
         assert head_sample.shape[0] == partition_original_size
         assert relation_sample.shape[0] == partition_original_size
         assert tail_sample.shape[0] == partition_original_size
         assert random_df.shape[0] == partition_original_size
 
         # ===== Manage duplicates introduced by the previous sampling ===== #
-        random_df = random_df.drop_duplicates(keep="first").reset_index(drop=True)
-        print(f"\t\t random_df size after drop duplicates: {random_df.shape}")
+        random_df = random_df.astype(str).drop_duplicates(keep="first").reset_index(drop=True)
+        print(f"\t\t {partition_name} random_df size after drop duplicates: {random_df.shape}")
 
         # ===== Create Random fake y vector ===== #
         random_y = pd.Series(data=[1 for _ in range(0, random_df.shape[0])],

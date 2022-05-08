@@ -5,8 +5,7 @@ from pykeen.version import VERSION as PYKEEN_VERSION
 from torch.version import __version__ as torch_version
 
 from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
-    create_non_existent_folder, \
-    ORIGINAL, NOISE_10, NOISE_20, NOISE_30, \
+    create_non_existent_folder, ORIGINAL, TOTAL_RANDOM, \
     TRANSE, DISTMULT, TRANSH, COMPLEX, HOLE, CONVE, ROTATE, PAIRRE, AUTOSF, BOXE, MODELS_DIR
 from src.core.hyper_configuration_parsing import get_best_hyper_parameters_diz, parse_best_hyper_parameters_diz
 from src.core.pykeen_wrapper import get_train_test_validation, train, store, load, print_partitions_info
@@ -38,18 +37,14 @@ valid_kge_models = [
 
 if __name__ == '__main__':
 
-    fp = os.path.join(MODELS_DIR, "training_log.txt")
+    fp = os.path.join(MODELS_DIR, "random_baseline_log.txt")
 
     with open(fp, "w") as fw_log:
 
         # Instantiate the parser for the command line arguments
         args_parser = argparse.ArgumentParser()
 
-        # Add command line arguments entries
-        args_parser.add_argument('dataset',
-                                 help='Dataset Name',
-                                 type=str,
-                                 choices=all_datasets_names)
+        # Add new command line argument
         args_parser.add_argument('-f', '--force',
                                  dest="force",
                                  help='Boolean flag for force training or not',
@@ -62,36 +57,39 @@ if __name__ == '__main__':
 
         # Access to the command line arguments
         print_and_write(out_file=fw_log, text=f"Argument values: \n\t {cl_args} \n")
-        dataset_name = str(cl_args.dataset).upper().strip()
-        print_and_write(out_file=fw_log, text=f"dataset_name: {dataset_name}")
         force_training = bool(cl_args.force)
         print_and_write(out_file=fw_log, text=f"force_training: {force_training}")
 
-        # Get the folder path for the specified dataset where store the trained models
-        dataset_models_folder_path = DatasetPathFactory(dataset_name=dataset_name).get_models_folder_path()
-        assert dataset_name in dataset_models_folder_path
+        # Set noise level to "random"
+        noise_level = TOTAL_RANDOM
 
         # check on cuda
         print_and_write(out_file=fw_log, text=f"{get_cuda_info()}")
 
-        # print configuration
-        print_and_write(out_file=fw_log, text=f"\n{'*' * 80}")
-        print_and_write(out_file=fw_log, text="TRAINING CONFIGURATION")
-        print_and_write(out_file=fw_log, text=f"\t\t dataset_name: {dataset_name}")
-        print_and_write(out_file=fw_log, text=f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
-        print_and_write(out_file=fw_log, text=f"\t\t force_training: {force_training}")
-        print_and_write(out_file=fw_log, text=f"\t\t pykeen version: {PYKEEN_VERSION}")
-        print_and_write(out_file=fw_log, text=f"\t\t torch version: {torch_version}")
-        print_and_write(out_file=fw_log, text=f"{'*' * 80}\n\n")
-
-        # === Iterate over noise levels === #
-        for noise_level in [
-            ORIGINAL,
-            NOISE_10,
-            NOISE_20,
-            NOISE_30,
+        # === Iterate over datasets ===== #
+        for dataset_name in [
+            CODEXSMALL,
+            WN18RR,
+            FB15K237,
         ]:
-            print_and_write(out_file=fw_log, text=f"\n\n#################### {noise_level} ####################\n")
+            print_and_write(out_file=fw_log,
+                            text=f"\n\n############################## {dataset_name} ##############################\n")
+
+            # Get the folder path for the specified dataset where store the trained models
+            dataset_models_folder_path = DatasetPathFactory(dataset_name=dataset_name).get_models_folder_path()
+            assert dataset_name in dataset_models_folder_path
+
+            # print configuration
+            print_and_write(out_file=fw_log, text=f"\n{'*' * 80}")
+            print_and_write(out_file=fw_log, text="TRAINING CONFIGURATION")
+            print_and_write(out_file=fw_log, text=f"\t\t dataset_name: {dataset_name}")
+            print_and_write(out_file=fw_log, text=f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
+            print_and_write(out_file=fw_log, text=f"\t\t noise_level: {noise_level}")
+            print_and_write(out_file=fw_log, text=f"\t\t force_training: {force_training}")
+            print_and_write(out_file=fw_log, text=f"\t\t pykeen version: {PYKEEN_VERSION}")
+            print_and_write(out_file=fw_log, text=f"\t\t torch version: {torch_version}")
+            print_and_write(out_file=fw_log, text=f"{'*' * 80}\n")
+
             datasets_loader = TsvDatasetLoader(dataset_name=dataset_name, noise_level=noise_level)
 
             training_path, validation_path, testing_path = \
@@ -117,7 +115,7 @@ if __name__ == '__main__':
                                   testing_triples=testing,
                                   testing_triples_path=testing_path)
 
-            print_and_write(out_file=fw_log, text="\n\n>>> Start KGE models training...\n")
+            print_and_write(out_file=fw_log, text="\n>>> Start KGE models training...\n")
 
             # === Iterate over KGE models === #
             for model_name, year in [
@@ -216,10 +214,11 @@ if __name__ == '__main__':
                 print_and_write(out_file=fw_log,
                                 text=f">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
 
-            # conclude noises iteration
+            # conclude datasets iteration
+            del dataset_name, dataset_models_folder_path,
             del datasets_loader, training_path, validation_path, testing_path, training, validation, testing
             print_and_write(out_file=fw_log,
-                            text=f"\n###########################################################\n")
+                            text=f"\n######################################################################\n\n")
 
         # exit (conclude script)
         print_and_write(out_file=fw_log, text="EXIT 0")

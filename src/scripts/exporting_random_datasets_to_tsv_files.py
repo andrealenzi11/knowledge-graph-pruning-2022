@@ -10,6 +10,7 @@ from src.config.config import ORIGINAL, TRAINING_TSV, TRAINING_Y_FAKE_TSV, \
 from src.core.noise_generation import DeterministicNoiseGenerator
 from src.dao.dataset_loading import TsvDatasetLoader
 
+
 if __name__ == '__main__':
 
     for dataset_name, dataset_folder in [
@@ -116,4 +117,9 @@ if __name__ == '__main__':
             sep="\t", header=False, index=False, encoding="utf-8"
         )
 
+        del dataset_name, dataset_folder, tsv_dataset_loader, df_training, df_validation, df_testing
+        del noise_generator, random_dataset
+        del training_df_out_path, training_y_fake_out_path
+        del validation_df_out_path, validation_y_fake_out_path,
+        del testing_df_out_path, testing_y_fake_out_path
         print(f"{'-' * 80}\n")

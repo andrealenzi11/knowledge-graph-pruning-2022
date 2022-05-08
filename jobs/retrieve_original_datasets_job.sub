@@ -1,5 +1,5 @@
 universe                = docker
-docker_image            = andrealenzi/ubucudapy:graph_pruning_study_v1.5
+docker_image            = andrealenzi/ubucudapy:graph_pruning_study_v1.6
 executable              = /usr/bin/python3
 arguments               = /src/scripts/exporting_original_datasets_to_tsv_files.py
 should_transfer_files   = YES
@@ -8,8 +8,8 @@ output                  = out.$(ClusterId).$(ProcId)
 error                   = err.$(ClusterId).$(ProcId)
 log                     = log.$(ClusterId).$(ProcId)
 request_cpus            = 1
-request_gpus            = 1
-request_memory          = 4096M
+request_gpus            = 0
+request_memory          = 6144M
 request_disk            = 30720M
 +MountData1             = FALSE
 +MountData2             = FALSE
