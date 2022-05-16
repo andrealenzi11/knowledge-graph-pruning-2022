@@ -68,8 +68,8 @@ if __name__ == '__main__':
 
         # === Iterate over datasets ===== #
         for dataset_name in [
-            CODEXSMALL,
-            WN18RR,
+            # CODEXSMALL,
+            # WN18RR,
             FB15K237,
         ]:
             print_and_write(out_file=fw_log,
