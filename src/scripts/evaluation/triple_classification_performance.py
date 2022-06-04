@@ -11,7 +11,8 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, YAGO310_RESULTS_FOLDER_PATH, \
     COUNTRIES_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, NATIONS_RESULTS_FOLDER_PATH, RESCAL, F1_MACRO, \
     F1_POS, F1_NEG, NORM_DIST, Z_STAT, TOTAL_RANDOM
-from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_triples_scores
+from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_triples_scores2, \
+    get_label_id_map
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader, get_data_records
 from src.utils.distribution_plotting import draw_distribution_plot
 from src.utils.stats import get_center, print_2d_statistics
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     config.read('dataset_local.ini')
     dataset_name = config['dataset_info']['dataset_name']
     force_saving_flag = True
-    plot_confidence_flag = True
+    plot_confidence_flag = False
     use_median_flag = False
     force_saving = True
     n_round = 4
@@ -150,12 +151,16 @@ if __name__ == '__main__':
     assert ORIGINAL in validation_original_path
     assert "testing" in testing_original_path
     assert ORIGINAL in testing_original_path
-    # triples factories fro original dataset
+    # triples factories from original dataset
     training_original, testing_original, validation_original = \
         get_train_test_validation(training_set_path=training_original_path,
                                   test_set_path=testing_original_path,
                                   validation_set_path=validation_original_path,
                                   create_inverse_triples=False)
+    # dfs
+    training_original_df, validation_original_df, testing_original_df = \
+        datasets_loader_original.get_training_validation_testing_dfs(noisy_test_flag=False)
+    # info
     print_partitions_info(training_triples=training_original,
                           training_triples_path=training_original_path,
                           validation_triples=validation_original,
@@ -165,13 +170,14 @@ if __name__ == '__main__':
 
     # ===== Iteration over noise levels ===== #
     records = {}
-    for noise_level in [
+    selected_noise_levels = [
         TOTAL_RANDOM,
         ORIGINAL,
         NOISE_10,
         NOISE_20,
         NOISE_30,
-    ]:
+    ]
+    for noise_level in selected_noise_levels:
         print(f"\n\n#################### {noise_level} ####################\n")
         in_folder_path = os.path.join(dataset_models_folder_path, noise_level)
         assert dataset_name in in_folder_path
@@ -205,57 +211,77 @@ if __name__ == '__main__':
             current_record = {}
 
             print(f"\n >>>>> model_name: {model_name}")
-            in_file = os.path.join(in_folder_path, model_name, "trained_model.pkl")
-            print(in_file)
-            assert model_name in in_file
+            in_model_dir = os.path.join(in_folder_path, model_name)
+            print(f"model directory: '{in_model_dir}'")
+            in_model_file = os.path.join(in_model_dir, "trained_model.pkl")
+            in_entity_to_id_file = os.path.join(in_model_dir, "training_triples", "entity_to_id.tsv.gz")
+            in_relation_to_id_file = os.path.join(in_model_dir, "training_triples", "relation_to_id.tsv.gz")
+            assert model_name in in_model_dir
 
-            # if model wa not already trained, skip to the next iteration
-            if not os.path.isfile(in_file):
-                print("model not present! \n")
-                continue
+            # if model was not already trained, skip to the next iteration
+            for fp in [in_model_file, in_entity_to_id_file, in_relation_to_id_file]:
+                if not os.path.isfile(fp):
+                    print(f"'{fp}' not present! \n")
+                    continue
 
             # Skip Not valid models
-            if model_name == RESCAL:
+            if model_name in [
+                RESCAL,
+                "ConvE",
+            ]:
                 continue
 
+            # Get Label-to-Id Maps
+            entities_label_id_map = get_label_id_map(gzip_training_triples_path=in_entity_to_id_file)
+            relations_label_id_map = get_label_id_map(gzip_training_triples_path=in_relation_to_id_file)
+            print(f"entities_label_id_map size: {len(entities_label_id_map)}")
+            print(f"relations_label_id_map size: {len(relations_label_id_map)}")
+
             # Load model from FS
-            my_pykeen_model = torch.load(in_file).cpu()
+            my_pykeen_model = torch.load(in_model_file).cpu()
 
             # ===== Inference (computation of KGE scores) on Original Training Set ====== #
-            training_scores_tensor = my_pykeen_model.score_hrt(hrt_batch=training_original.mapped_triples,
-                                                               mode=None)
-            training_scores_vector = training_scores_tensor.cpu().detach().numpy().reshape(-1)
-            training_scores_center = get_center(scores=training_scores_vector, use_median=use_median_flag)
+            training_scores_vector = get_triples_scores2(trained_kge_model=my_pykeen_model,
+                                                         triples=training_original_df.to_records(index=False).tolist(),
+                                                         entities_label_id_map=entities_label_id_map,
+                                                         relation_label_id_map=relations_label_id_map)
+            training_scores_center = get_center(scores=training_scores_vector,
+                                                use_median=use_median_flag)
 
             # ===== Inference (computation of KGE scores) on Validation Set ====== #
             # FAKE
-            fake_validation_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
-                                                        triples=validation_100_fake_records,
-                                                        triples_factory=validation_100)
+            fake_validation_scores = get_triples_scores2(trained_kge_model=my_pykeen_model,
+                                                         triples=validation_100_fake_records,
+                                                         entities_label_id_map=entities_label_id_map,
+                                                         relation_label_id_map=relations_label_id_map)
             fake_validation_scores_center = get_center(scores=fake_validation_scores,
                                                        use_median=use_median_flag)
             # REAL
-            real_validation_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
-                                                        triples=validation_100_real_records,
-                                                        triples_factory=validation_100)
+            real_validation_scores = get_triples_scores2(trained_kge_model=my_pykeen_model,
+                                                         triples=validation_100_real_records,
+                                                         entities_label_id_map=entities_label_id_map,
+                                                         relation_label_id_map=relations_label_id_map)
+
             real_validation_scores_center = get_center(scores=real_validation_scores,
                                                        use_median=use_median_flag)
             # checks on validation scores
-            assert fake_validation_scores.shape[0] == real_validation_scores.shape[0]
-            assert real_validation_scores_center > fake_validation_scores_center
-            assert training_scores_center > fake_validation_scores_center
+            if noise_level != TOTAL_RANDOM:
+                assert real_validation_scores_center > fake_validation_scores_center
+                assert training_scores_center > fake_validation_scores_center
 
             # ===== Inference (computation of KGE scores) on Testing Set ====== #
             # FAKE
-            fake_testing_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
-                                                     triples=testing_100_fake_records,
-                                                     triples_factory=testing_100)
+            fake_testing_scores = get_triples_scores2(trained_kge_model=my_pykeen_model,
+                                                      triples=testing_100_fake_records,
+                                                      entities_label_id_map=entities_label_id_map,
+                                                      relation_label_id_map=relations_label_id_map)
             fake_testing_scores_center = get_center(scores=fake_testing_scores,
                                                     use_median=use_median_flag)
             # REAL
-            real_testing_scores = get_triples_scores(trained_kge_model=my_pykeen_model,
-                                                     triples=testing_100_real_records,
-                                                     triples_factory=testing_100)
+            real_testing_scores = get_triples_scores2(trained_kge_model=my_pykeen_model,
+                                                      triples=testing_100_real_records,
+                                                      entities_label_id_map=entities_label_id_map,
+                                                      relation_label_id_map=relations_label_id_map)
             real_testing_scores_center = get_center(scores=real_testing_scores,
                                                     use_median=use_median_flag)
 
@@ -277,26 +303,25 @@ if __name__ == '__main__':
                 decimal_precision=n_round)
 
             # check on testing scores
-            assert fake_testing_scores.shape[0] == real_testing_scores.shape[0]
-            assert real_testing_scores_center > fake_testing_scores_center
-            assert training_scores_center > fake_testing_scores_center
+            if noise_level != TOTAL_RANDOM:
+                assert real_testing_scores_center > fake_testing_scores_center
+                assert training_scores_center > fake_testing_scores_center
 
             # compute classification metrics
             threshold = \
                 fake_validation_scores_center + ((real_validation_scores_center - fake_validation_scores_center) / 2)
             print(f"classification threshold: {threshold}")
-            assert threshold < training_scores_center
-            assert threshold < real_validation_scores_center
-            assert threshold < real_testing_scores_center
-            assert threshold > fake_validation_scores_center
-            assert threshold > fake_testing_scores_center
+            if noise_level != TOTAL_RANDOM:
+                assert threshold < training_scores_center
+                assert threshold < real_validation_scores_center
+                assert threshold < real_testing_scores_center
+                assert threshold > fake_validation_scores_center
+                assert threshold > fake_testing_scores_center
             y_true = [1 for _ in real_testing_scores] + [0 for _ in fake_testing_scores]
             y_pred = [1 if y >= threshold else 0 for y in real_testing_scores] + \
                      [1 if y >= threshold else 0 for y in fake_testing_scores]
-            print(y_true)
-            print(y_pred)
             assert len(y_pred) == len(y_true)
-            assert sum(y_true) == int(len(y_true) / 2)
+            assert sum(y_true) == len(real_testing_scores)
             assert sum(y_pred) <= len(y_true)
             assert sum(y_pred) >= 0
             accuracy = round(metrics.accuracy_score(y_true=y_true, y_pred=y_pred), n_round)
@@ -387,7 +412,7 @@ if __name__ == '__main__':
     df_results = df_results.sort_index(inplace=False, axis=0, ascending=True)
     diz_results_records = df_results.to_dict(orient="records")
     diz_results_index = list(df_results.index.values)
-    step = 4
+    step = len(selected_noise_levels)
     i = 0
     new_records = []
     new_index = []

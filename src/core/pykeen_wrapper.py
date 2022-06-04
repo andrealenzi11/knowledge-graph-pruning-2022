@@ -1,5 +1,6 @@
+import gzip
 import os
-from typing import Optional, Tuple, Sequence, List
+from typing import Optional, Tuple, Sequence, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -259,4 +260,49 @@ def get_triples_scores(trained_kge_model: Model,
         mode=None,  # "testing",
     )
     assert pred_df.shape[0] == len(triples)
+    return pred_df["score"].values
+
+
+def get_label_id_map(gzip_training_triples_path: str) -> Dict[str, int]:
+    assert os.path.isfile(gzip_training_triples_path)
+    assert gzip_training_triples_path.endswith(".gz")
+    with gzip.open(gzip_training_triples_path, 'rb') as fr_entity:
+        df_ids_labels = pd.read_csv(fr_entity, sep="\t", header="infer", encoding="utf-8")
+    assert "id" in df_ids_labels.columns
+    assert "label" in df_ids_labels.columns
+    df_ids_labels["id"] = df_ids_labels["id"].astype(int)
+    df_ids_labels["label"] = df_ids_labels["label"].astype(str)
+    return dict(zip(df_ids_labels["label"], df_ids_labels["id"]))
+
+
+def get_triples_scores2(trained_kge_model: Model,
+                        triples: Sequence[Tuple[str, str, str]],
+                        entities_label_id_map: Dict[str, int],
+                        relation_label_id_map: Dict[str, int]) -> np.ndarray:
+    mapped_triples = []
+    num_error_triples = 0
+    num_valid_triples = 0
+    for h, r, t in triples:
+        try:
+            h_id = entities_label_id_map[h]
+            r_id = relation_label_id_map[r]
+            t_id = entities_label_id_map[t]
+        except KeyError:
+            num_error_triples += 1
+            continue
+        num_valid_triples += 1
+        mapped_triples.append([h_id, r_id, t_id])
+    mapped_triples_tensor = torch.tensor(mapped_triples,
+                                         dtype=torch.long,
+                                         device="cpu",
+                                         requires_grad=False)
+    print(f"#error_triples: {num_error_triples}  |  #valid_triples: {num_valid_triples}")
+    pred_df = predict_triples_df(
+        model=trained_kge_model,
+        triples=mapped_triples_tensor,
+        triples_factory=None,
+        batch_size=None,
+        mode=None,  # "testing",
+    )
+    assert pred_df.shape[0] == num_valid_triples
     return pred_df["score"].values

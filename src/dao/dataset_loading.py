@@ -243,14 +243,14 @@ def get_data_records(kg_df: pd.DataFrame,
     :param y_fake_series: Series with ones that indicate fake value and zeros that indicate true values
     :param select_only_fake_flag: boolean flag that indicate if select only fake triples or not
 
-    :return: List[List[str]]
+    :return: List[Tuple[str]]
     [
-        ["head_1", "relation_1", "tail_1"],
-        ["head_2", "relation_2", "tail_3"],
+        ("head_1", "relation_1", "tail_1"),
+        ("head_2", "relation_2", "tail_3"),
             .           .            .
             .           .            .
             .           .            .
-        ["head_N", "relation_N", "tail_N"],
+        ("head_N", "relation_N", "tail_N"),
     ]
     """
     assert isinstance(kg_df, pd.DataFrame)
