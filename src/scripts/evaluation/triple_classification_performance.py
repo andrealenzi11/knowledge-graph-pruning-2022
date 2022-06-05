@@ -10,7 +10,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     ORIGINAL, NOISE_10, NOISE_20, NOISE_30, NOISE_100, \
     FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, YAGO310_RESULTS_FOLDER_PATH, \
     COUNTRIES_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, NATIONS_RESULTS_FOLDER_PATH, RESCAL, F1_MACRO, \
-    F1_POS, F1_NEG, NORM_DIST, Z_STAT, TOTAL_RANDOM
+    F1_POS, F1_NEG, NORM_DIST, Z_STAT, TOTAL_RANDOM, CONVE
 from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_triples_scores2, \
     get_label_id_map
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader, get_data_records
@@ -227,8 +227,11 @@ if __name__ == '__main__':
             # Skip Not valid models
             if model_name in [
                 RESCAL,
-                "ConvE",
             ]:
+                continue
+
+            # Skip ConvE for FB15K237
+            if model_name == CONVE and dataset_name == FB15K237:
                 continue
 
             # Get Label-to-Id Maps
