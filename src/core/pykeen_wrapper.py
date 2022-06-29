@@ -278,7 +278,8 @@ def get_label_id_map(gzip_training_triples_path: str) -> Dict[str, int]:
 def get_triples_scores2(trained_kge_model: Model,
                         triples: Sequence[Tuple[str, str, str]],
                         entities_label_id_map: Dict[str, int],
-                        relation_label_id_map: Dict[str, int]) -> np.ndarray:
+                        relation_label_id_map: Dict[str, int],
+                        debug_info: bool = False) -> np.ndarray:
     mapped_triples = []
     num_error_triples = 0
     num_valid_triples = 0
@@ -296,7 +297,8 @@ def get_triples_scores2(trained_kge_model: Model,
                                          dtype=torch.long,
                                          device="cpu",
                                          requires_grad=False)
-    print(f"#error_triples: {num_error_triples}  |  #valid_triples: {num_valid_triples}")
+    if debug_info:
+        print(f"#error_triples: {num_error_triples}  |  #valid_triples: {num_valid_triples}")
     pred_df = predict_triples_df(
         model=trained_kge_model,
         triples=mapped_triples_tensor,
