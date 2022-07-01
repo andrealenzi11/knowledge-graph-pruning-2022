@@ -1,6 +1,6 @@
 import gzip
 import os
-from typing import Optional, Tuple, Sequence, List, Dict
+from typing import Optional, Tuple, Sequence, Dict
 
 import numpy as np
 import pandas as pd
@@ -307,4 +307,28 @@ def get_triples_scores2(trained_kge_model: Model,
         mode=None,  # "testing",
     )
     assert pred_df.shape[0] == num_valid_triples
+    return pred_df["score"].values
+
+
+def get_triples_scores3(trained_kge_model: Model,
+                         triples: Sequence[Tuple[str, str, str]],
+                         entities_label_id_map: Dict[str, int],
+                         relation_label_id_map: Dict[str, int]) -> np.ndarray:
+    mapped_triples = []
+    for h, r, t in triples:
+        h_id = entities_label_id_map[h]
+        r_id = relation_label_id_map[r]
+        t_id = entities_label_id_map[t]
+        mapped_triples.append([h_id, r_id, t_id])
+    mapped_triples_tensor = torch.tensor(mapped_triples,
+                                         dtype=torch.long,
+                                         device="cpu",
+                                         requires_grad=False)
+    pred_df = predict_triples_df(
+        model=trained_kge_model,
+        triples=mapped_triples_tensor,
+        triples_factory=None,
+        batch_size=None,
+        mode=None,  # "testing",
+    )
     return pred_df["score"].values

@@ -12,7 +12,7 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
     FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, YAGO310_RESULTS_FOLDER_PATH, \
     COUNTRIES_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, NATIONS_RESULTS_FOLDER_PATH, TOTAL_RANDOM
 from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_label_id_map, \
-    get_triples_scores2
+    get_triples_scores2, get_triples_scores3
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 # set pandas visualization options
 from src.utils.stats import get_center
@@ -197,12 +197,11 @@ if __name__ == '__main__':
             my_pykeen_model = torch.load(in_model_file).cpu()
 
             # ===== Inference (computation of KGE scores) on Testing Set ====== #
-            # REAL
             real_testing_scores = get_triples_scores2(trained_kge_model=my_pykeen_model,
-                                                      # triples=testing_original_df.to_records(index=False).tolist(),
                                                       triples=list(testing_triples_set),
                                                       entities_label_id_map=entities_label_id_map,
-                                                      relation_label_id_map=relations_label_id_map)
+                                                      relation_label_id_map=relations_label_id_map,
+                                                      debug_info=True)
             real_testing_scores_sorted = np.sort(real_testing_scores)
             real_testing_scores_center = get_center(scores=real_testing_scores,
                                                     use_median=use_median_flag)
@@ -211,8 +210,9 @@ if __name__ == '__main__':
             print(f"real_testing_scores_sorted.shape: {real_testing_scores_sorted.shape}")
 
             # Link Deletion Task - Evaluation algorithm
-            head_ranks = []
-            tail_ranks = []
+            mr_sum, mrr_sum = 0, 0
+            hits_at_1_sum, hits_at_3_sum, hits_at_5_sum, hits_at_10_sum = 0, 0, 0, 0
+            test_size = len(testing_triples_set)
             for h, r, t in testing_triples_set:
                 fake_head_triple = None
                 fake_tail_triple = None
@@ -226,29 +226,44 @@ if __name__ == '__main__':
                     fake_tail_triple = (h, r, new_t)
                     if fake_tail_triple not in valid_triples_set:
                         break
-                head_tail_scores = get_triples_scores2(trained_kge_model=my_pykeen_model,
-                                                       triples=[
-                                                           fake_head_triple,
-                                                           fake_tail_triple
-                                                       ],
-                                                       entities_label_id_map=entities_label_id_map,
-                                                       relation_label_id_map=relations_label_id_map)
-                fake_h_score, fake_t_score = head_tail_scores[0], head_tail_scores[1]
-                i_h = np.searchsorted(real_testing_scores_sorted, fake_h_score)
-                head_ranks.append(i_h)
-                i_t = np.searchsorted(real_testing_scores_sorted, fake_t_score)
-                tail_ranks.append(i_t)
-            # metrics
-            mr_head = np.array(head_ranks).mean()
-            mr_tail = np.array(tail_ranks).mean()
-            print("mr", mr_head, mr_tail)
-            mr = float(mr_head + mr_tail / 2)
-            mrr = float(real_testing_scores_sorted[-1])
-            hits_at_1 = float(real_testing_scores_center)
-            hits_at_3 = 0
-            hits_at_5 = 0
-            hits_at_10 = 0
 
+                try:
+                    head_tail_scores = get_triples_scores3(trained_kge_model=my_pykeen_model,
+                                                           triples=[
+                                                               fake_head_triple,
+                                                               fake_tail_triple
+                                                           ],
+                                                           entities_label_id_map=entities_label_id_map,
+                                                           relation_label_id_map=relations_label_id_map)
+                except KeyError:
+                    test_size -= 1
+                    continue
+
+                fake_h_score, fake_t_score = head_tail_scores[0], head_tail_scores[1]
+                rank_head = np.searchsorted(a=real_testing_scores_sorted, v=fake_h_score, side='left') + 1
+                rank_tail = np.searchsorted(a=real_testing_scores_sorted, v=fake_t_score, side='left') + 1
+                rank_both = rank_head + rank_tail
+                inverse_rank_both = (1.0 / rank_head) + (1.0 / rank_tail)
+                mr_sum += rank_both
+                mrr_sum += inverse_rank_both
+                if int(rank_both / 2.0) <= 1:
+                    hits_at_1_sum += 1
+                if int(rank_both / 2.0) <= 3:
+                    hits_at_3_sum += 1
+                if int(rank_both / 2.0) <= 5:
+                    hits_at_5_sum += 1
+                if int(rank_both / 2.0) <= 10:
+                    hits_at_10_sum += 1
+
+            # Metrics
+            print(f"new test size: {test_size}")
+            double_test_size = 2 * test_size
+            mr = float(mr_sum / double_test_size)
+            mrr = float(mrr_sum / double_test_size)
+            hits_at_1 = float(hits_at_1_sum / test_size)
+            hits_at_3 = float(hits_at_3_sum / test_size)
+            hits_at_5 = float(hits_at_5_sum / test_size)
+            hits_at_10 = float(hits_at_10_sum / test_size)
 
             # Update internal current record diz
             current_record = dict()
@@ -311,7 +326,7 @@ if __name__ == '__main__':
     print(f"\t out_path: {out_path}")
     assert dataset_name in out_path
     assert out_path.endswith("results.xlsx")
-    assert str(out_path.split(os.path.sep)[-1]).startswith("link_prediction")
+    assert str(out_path.split(os.path.sep)[-1]).startswith("link_pruning")
     if (os.path.isfile(out_path)) and (not force_saving):
         raise OSError(f"'{out_path}' already exists!")
     df_results2.to_excel(out_path, header=True, index=True, encoding="utf-8", engine="openpyxl")
