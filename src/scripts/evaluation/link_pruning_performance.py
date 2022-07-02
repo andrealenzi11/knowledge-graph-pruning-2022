@@ -16,6 +16,7 @@ from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
 # set pandas visualization options
 from src.utils.stats import get_center
+from pykeen.metrics.ranking import *
 
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     plot_confidence_flag = False
     use_median_flag = False
     force_saving = True
-    n_round = 4
+    n_round = 3
     selected_metrics = {
         MR,
         MRR,
@@ -210,9 +211,17 @@ if __name__ == '__main__':
             print(f"real_testing_scores_sorted.shape: {real_testing_scores_sorted.shape}")
 
             # Link Deletion Task - Evaluation algorithm
-            mr_sum, mrr_sum = 0, 0
-            hits_at_1_sum, hits_at_3_sum, hits_at_5_sum, hits_at_10_sum = 0, 0, 0, 0
+            ranks = []
+            mr_calculator = ArithmeticMeanRank()
+            mrr_calculator = InverseHarmonicMeanRank()
+            adjusted_mrr_calculator = AdjustedInverseHarmonicMeanRank()
+            hits_at_1_calculator = HitsAtK(k=1)
+            hits_at_3_calculator = HitsAtK(k=3)
+            hits_at_5_calculator = HitsAtK(k=5)
+            hits_at_10_calculator = HitsAtK(k=10)
             test_size = len(testing_triples_set)
+            print(f"original test size: {test_size}")
+
             for h, r, t in testing_triples_set:
                 fake_head_triple = None
                 fake_tail_triple = None
@@ -241,29 +250,19 @@ if __name__ == '__main__':
 
                 fake_h_score, fake_t_score = head_tail_scores[0], head_tail_scores[1]
                 rank_head = np.searchsorted(a=real_testing_scores_sorted, v=fake_h_score, side='left') + 1
-                rank_tail = np.searchsorted(a=real_testing_scores_sorted, v=fake_t_score, side='left') + 1
+                rank_tail = np.searchsorted(a=real_testing_scores_sorted, v=fake_t_score, side='left') +1
                 rank_both = rank_head + rank_tail
-                inverse_rank_both = (1.0 / rank_head) + (1.0 / rank_tail)
-                mr_sum += rank_both
-                mrr_sum += inverse_rank_both
-                if int(rank_both / 2.0) <= 1:
-                    hits_at_1_sum += 1
-                if int(rank_both / 2.0) <= 3:
-                    hits_at_3_sum += 1
-                if int(rank_both / 2.0) <= 5:
-                    hits_at_5_sum += 1
-                if int(rank_both / 2.0) <= 10:
-                    hits_at_10_sum += 1
+                ranks.append(int(rank_both / 2.0))
 
             # Metrics
             print(f"new test size: {test_size}")
-            double_test_size = 2 * test_size
-            mr = float(mr_sum / double_test_size)
-            mrr = float(mrr_sum / double_test_size)
-            hits_at_1 = float(hits_at_1_sum / test_size)
-            hits_at_3 = float(hits_at_3_sum / test_size)
-            hits_at_5 = float(hits_at_5_sum / test_size)
-            hits_at_10 = float(hits_at_10_sum / test_size)
+            ranks_array = np.array(ranks, dtype=int)
+            mr = round(float(mr_calculator(ranks_array)), n_round)
+            mrr = round(float(mrr_calculator(ranks_array)), n_round)
+            hits_at_1 = round(float(hits_at_1_calculator(ranks_array)), n_round)
+            hits_at_3 = round(float(hits_at_3_calculator(ranks_array)), n_round)
+            hits_at_5 = round(float(hits_at_5_calculator(ranks_array)), n_round)
+            hits_at_10 = round(float(hits_at_10_calculator(ranks_array)), n_round)
 
             # Update internal current record diz
             current_record = dict()
