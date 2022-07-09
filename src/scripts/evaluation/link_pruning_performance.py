@@ -5,6 +5,8 @@ import random
 import numpy as np
 import pandas as pd
 import torch
+from pykeen.metrics.ranking import ArithmeticMeanRank, InverseHarmonicMeanRank, AdjustedInverseHarmonicMeanRank, \
+    HitsAtK, AdjustedArithmeticMeanRank
 
 from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, NATIONS, \
     MR, MRR, HITS_AT_1, HITS_AT_3, HITS_AT_5, HITS_AT_10, \
@@ -14,10 +16,9 @@ from src.config.config import COUNTRIES, FB15K237, WN18RR, YAGO310, CODEXSMALL, 
 from src.core.pykeen_wrapper import get_train_test_validation, print_partitions_info, get_label_id_map, \
     get_triples_scores2, get_triples_scores3
 from src.dao.dataset_loading import DatasetPathFactory, TsvDatasetLoader
-# set pandas visualization options
 from src.utils.stats import get_center
-from pykeen.metrics.ranking import *
 
+# set pandas visualization options
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
@@ -47,8 +48,6 @@ if __name__ == '__main__':
                                 "starting from the 'dataset.ini' template!")
     config.read('dataset_local.ini')
     dataset_name = config['dataset_info']['dataset_name']
-    force_saving_flag = True
-    plot_confidence_flag = False
     use_median_flag = False
     force_saving = True
     n_round = 3
@@ -67,13 +66,11 @@ if __name__ == '__main__':
     dataset_results_folder_path = datasets_names_results_folder_map[dataset_name]
     assert dataset_name in dataset_results_folder_path
 
-    print("\n> Triple Classification Evaluation - Configuration")
+    print("\n> Link Pruning Evaluation - Configuration")
     print(f"\n{'*' * 80}")
     print(f"\t\t dataset_name: {dataset_name}")
     print(f"\t\t dataset_models_folder_path: {dataset_models_folder_path}")
     print(f"\t\t dataset_results_folder_path: {dataset_results_folder_path}")
-    print(f"\t\t force_saving_flag: {force_saving_flag}")
-    print(f"\t\t plot_confidence_flag: {plot_confidence_flag}")
     print(f"\t\t use_median_flag: {use_median_flag}")
     print(f"\t\t my_decimal_precision: {n_round}")
     print(f"{'*' * 80}\n\n")
@@ -104,17 +101,23 @@ if __name__ == '__main__':
     validation_triples_set = {tuple(triple) for triple in validation_original_df.values}
     testing_triples_set = {tuple(triple) for triple in testing_original_df.values}
     valid_triples_set = training_triples_set.union(validation_triples_set).union(testing_triples_set)
-    valid_entities = set()
+    # valid entities
+    valid_entities_set = set()
+    valid_entities_list = list()
     for vtriple in valid_triples_set:
-        valid_entities.add(vtriple[0])  # add head entity
-        valid_entities.add(vtriple[2])  # add tail entity
-    print(f"\n#training_triples_set: {len(training_triples_set)}")
+        valid_entities_set.add(vtriple[0])  # add head entity
+        valid_entities_set.add(vtriple[2])  # add tail entity
+        valid_entities_list.append(vtriple[0])  # add head entity
+        valid_entities_list.append(vtriple[2])  # add tail entity
+    # Info
+    print("\n > Valid Triples:")
+    print(f"#training_triples_set: {len(training_triples_set)}")
     print(f"#validation_triples_set: {len(validation_triples_set)}")
     print(f"#testing_triples_set: {len(testing_triples_set)}")
-    print(f"\n#valid_triples_set: {len(valid_triples_set)}")
-    print(f"#valid_entities: {len(valid_entities)}")
-
-    # info
+    print(f"#valid_triples_set: {len(valid_triples_set)}")
+    print("\n > Valid Entities:")
+    print(f"#valid_entities_set: {len(valid_entities_set)}")
+    print(f"#valid_entities_list: {len(valid_entities_set)}")
     print_partitions_info(training_triples=training_original,
                           training_triples_path=training_original_path,
                           validation_triples=validation_original,
@@ -132,31 +135,11 @@ if __name__ == '__main__':
         NOISE_30,
     ]
     for noise_level in selected_noise_levels:
+
         print(f"\n\n#################### {noise_level} ####################\n")
         in_folder_path = os.path.join(dataset_models_folder_path, noise_level)
         assert dataset_name in in_folder_path
         assert noise_level in in_folder_path
-
-        datasets_loader = TsvDatasetLoader(dataset_name=dataset_name, noise_level=noise_level)
-        training_path, validation_path, testing_path = \
-            datasets_loader.get_training_validation_testing_dfs_paths(noisy_test_flag=False)
-        assert "training" in training_path
-        assert noise_level in training_path
-        assert "validation" in validation_path
-        assert noise_level in validation_path
-        assert "testing" in testing_path
-        # assert noise_level in testing_path
-
-        training, testing, validation = get_train_test_validation(training_set_path=training_path,
-                                                                  test_set_path=testing_path,
-                                                                  validation_set_path=validation_path,
-                                                                  create_inverse_triples=False)
-        print_partitions_info(training_triples=training,
-                              training_triples_path=training_path,
-                              validation_triples=validation,
-                              validation_triples_path=validation_path,
-                              testing_triples=testing,
-                              testing_triples_path=testing_path)
 
         # ===== Iteration over KGE models ===== #
         row = {}
@@ -197,12 +180,20 @@ if __name__ == '__main__':
             # Load model from FS
             my_pykeen_model = torch.load(in_model_file).cpu()
 
+            # real testing triples
+            triples = list(testing_triples_set)
+            # triples = list(training_triples_set) + list(validation_triples_set) + list(testing_triples_set)
+            test_size = len(testing_triples_set)
+            print(f"original test size: {test_size}")
+
             # ===== Inference (computation of KGE scores) on Testing Set ====== #
-            real_testing_scores = get_triples_scores2(trained_kge_model=my_pykeen_model,
-                                                      triples=list(testing_triples_set),
-                                                      entities_label_id_map=entities_label_id_map,
-                                                      relation_label_id_map=relations_label_id_map,
-                                                      debug_info=True)
+            real_testing_scores = get_triples_scores2(
+                trained_kge_model=my_pykeen_model,
+                triples=triples,
+                entities_label_id_map=entities_label_id_map,
+                relation_label_id_map=relations_label_id_map,
+                debug_info=True
+            )
             real_testing_scores_sorted = np.sort(real_testing_scores)
             real_testing_scores_center = get_center(scores=real_testing_scores,
                                                     use_median=use_median_flag)
@@ -212,26 +203,27 @@ if __name__ == '__main__':
 
             # Link Deletion Task - Evaluation algorithm
             ranks = []
+            ranks_head = []
+            ranks_tail = []
             mr_calculator = ArithmeticMeanRank()
+            adjusted_mr_calculator = AdjustedArithmeticMeanRank()
             mrr_calculator = InverseHarmonicMeanRank()
             adjusted_mrr_calculator = AdjustedInverseHarmonicMeanRank()
             hits_at_1_calculator = HitsAtK(k=1)
             hits_at_3_calculator = HitsAtK(k=3)
             hits_at_5_calculator = HitsAtK(k=5)
             hits_at_10_calculator = HitsAtK(k=10)
-            test_size = len(testing_triples_set)
-            print(f"original test size: {test_size}")
 
             for h, r, t in testing_triples_set:
                 fake_head_triple = None
                 fake_tail_triple = None
                 while True:
-                    new_h = random.sample(valid_entities, 1)[0]
+                    new_h = random.sample(valid_entities_set, 1)[0]
                     fake_head_triple = (new_h, r, t)
                     if fake_head_triple not in valid_triples_set:
                         break
                 while True:
-                    new_t = random.sample(valid_entities, 1)[0]
+                    new_t = random.sample(valid_entities_set, 1)[0]
                     fake_tail_triple = (h, r, new_t)
                     if fake_tail_triple not in valid_triples_set:
                         break
@@ -248,21 +240,61 @@ if __name__ == '__main__':
                     test_size -= 1
                     continue
 
+                assert len(head_tail_scores) == 2
                 fake_h_score, fake_t_score = head_tail_scores[0], head_tail_scores[1]
                 rank_head = np.searchsorted(a=real_testing_scores_sorted, v=fake_h_score, side='left') + 1
-                rank_tail = np.searchsorted(a=real_testing_scores_sorted, v=fake_t_score, side='left') +1
-                rank_both = rank_head + rank_tail
-                ranks.append(int(rank_both / 2.0))
+                rank_tail = np.searchsorted(a=real_testing_scores_sorted, v=fake_t_score, side='left') + 1
+                ranks.append(int((rank_head + rank_tail) / 2.0))
+                ranks_head.append(rank_head)
+                ranks_tail.append(rank_tail)
 
             # Metrics
             print(f"new test size: {test_size}")
             ranks_array = np.array(ranks, dtype=int)
-            mr = round(float(mr_calculator(ranks_array)), n_round)
-            mrr = round(float(mrr_calculator(ranks_array)), n_round)
-            hits_at_1 = round(float(hits_at_1_calculator(ranks_array)), n_round)
-            hits_at_3 = round(float(hits_at_3_calculator(ranks_array)), n_round)
-            hits_at_5 = round(float(hits_at_5_calculator(ranks_array)), n_round)
-            hits_at_10 = round(float(hits_at_10_calculator(ranks_array)), n_round)
+            ranks_head_array = np.array(ranks_head, dtype=int)
+            ranks_tail_array = np.array(ranks_tail, dtype=int)
+
+            # MR
+            mr_head = round(float(mr_calculator(ranks_head_array, test_size)), n_round)
+            mr_tail = round(float(mr_calculator(ranks_tail_array, test_size)), n_round)
+            # print(round(int(mr_calculator(ranks_array)), n_round))
+            mr = round(int((mr_head + mr_tail) / 2.0), n_round)
+            print(f"MR: {mr} | h={mr_head} | t={mr_tail}")
+
+            # MRR
+            mrr_head = round(float(mrr_calculator(ranks_head_array, test_size)), n_round)
+            mrr_tail = round(float(mrr_calculator(ranks_tail_array, test_size)), n_round)
+            # print(round(float(mrr_calculator(ranks_array)), n_round))
+            mrr = round(float((mrr_head + mrr_tail) / 2.0), n_round)
+            print(f"MRR: {mrr} | h={mrr_head} | t={mrr_tail}")
+
+            # HITS AT 1
+            hits_at_1_head = round(float(hits_at_1_calculator(ranks_head_array)), n_round)
+            hits_at_1_tail = round(float(hits_at_1_calculator(ranks_tail_array)), n_round)
+            # print(round(float(hits_at_1_calculator(ranks_array)), n_round))
+            hits_at_1 = round(float((hits_at_1_head + hits_at_1_tail) / 2.0), n_round)
+            print(f"Hits@1: {hits_at_1} | h={hits_at_1_head} | t={hits_at_1_tail}")
+
+            # HITS AT 3
+            hits_at_3_head = round(float(hits_at_3_calculator(ranks_head_array)), n_round)
+            hits_at_3_tail = round(float(hits_at_3_calculator(ranks_tail_array)), n_round)
+            # print(round(float(hits_at_3_calculator(ranks_array)), n_round))
+            hits_at_3 = round(float((hits_at_3_head + hits_at_3_tail) / 2.0), n_round)
+            print(f"Hits@3: {hits_at_3} | h={hits_at_3_head} | t={hits_at_3_tail}")
+
+            # HITS AT 5
+            hits_at_5_head = round(float(hits_at_5_calculator(ranks_head_array)), n_round)
+            hits_at_5_tail = round(float(hits_at_5_calculator(ranks_tail_array)), n_round)
+            # print(round(float(hits_at_5_calculator(ranks_array)), n_round))
+            hits_at_5 = round(float((hits_at_5_head + hits_at_5_tail) / 2.0), n_round)
+            print(f"Hits@5: {hits_at_5} | h={hits_at_5_head} | t={hits_at_5_tail}")
+
+            # HITS AT 10
+            hits_at_10_head = round(float(hits_at_10_calculator(ranks_head_array)), n_round)
+            hits_at_10_tail = round(float(hits_at_10_calculator(ranks_tail_array)), n_round)
+            # print(round(float(hits_at_10_calculator(ranks_array)), n_round))
+            hits_at_10 = round(float((hits_at_10_head + hits_at_10_tail) / 2.0), n_round)
+            print(f"Hits@10: {hits_at_10} | h={hits_at_10_head} | t={hits_at_10_tail}")
 
             # Update internal current record diz
             current_record = dict()
