@@ -75,3 +75,19 @@ def get_center(scores: np.ndarray,
         return float(np.median(a=scores))
     else:
         return float(np.mean(a=scores))
+
+
+def find_maximum(label_values_map: Dict[str, Sequence[float]]) -> float:
+    max_values = []
+    for k, v in label_values_map.items():
+        assert v
+        max_values.append(max(v))
+    return max(max_values)
+
+
+def find_minimum(label_values_map: Dict[str, Sequence[float]]) -> float:
+    max_values = []
+    for k, v in label_values_map.items():
+        assert v
+        max_values.append(min(v))
+    return min(max_values)
