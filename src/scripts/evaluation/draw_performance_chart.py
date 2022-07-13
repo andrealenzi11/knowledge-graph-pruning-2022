@@ -71,6 +71,11 @@ if __name__ == '__main__':
     dataset_results_folder_path = datasets_names_results_folder_map[dataset_name]
     assert dataset_name in dataset_results_folder_path
 
+    out_folder = os.path.join(dataset_results_folder_path, "charts")
+    print(f"out_folder: {out_folder}")
+    if not os.path.isdir(out_folder):
+        os.makedirs(name=out_folder)
+
     for task, metrics in TASK_METRICS_MAP.items():
 
         if task == "link_pruning":
@@ -143,6 +148,8 @@ if __name__ == '__main__':
             print(f"\n - top_y: {top_y}")
 
             print("\n> Plotting...")
+            out_file = os.path.join(out_folder, f"{dataset_name}_{task}_{metric}.png")
+            print(f"out_file: {out_file}")
             plot_linear_chart(
                 name_values_map=res_diz,
                 title=f"Performance on {dataset_name} for {task.replace('_', ' ')} task",
@@ -150,7 +157,9 @@ if __name__ == '__main__':
                 y_axis_name=metric,
                 x_ticks=[0, 1, 2, 3],
                 x_labels=["0%", "10%", "20%", "30%"],
-                # axes_limits=(0 - board, 3 + board, 0 - 0.002, top_y + board)
+                # axes_limits=(0 - board, 3 + board, 0 - 0.002, top_y + board),
+                out_file_path=out_file,
+                show_flag=False,
             )
 
             print(f"{'-' * 80} \n\n")

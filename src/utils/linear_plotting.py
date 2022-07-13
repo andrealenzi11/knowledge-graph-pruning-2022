@@ -5,6 +5,11 @@ import numpy as np
 from scipy import interpolate
 import seaborn as sns
 
+# fig = plt.figure()
+# print(fig.get_size_inches())    # [6.4 4.8]
+# print(fig.dpi)                  # 100.0
+plt.rcParams["figure.figsize"] = (12.8, 9.6)
+
 
 def plot_linear_chart(name_values_map: Dict[str, List[float]],
                       title: str,
@@ -14,8 +19,9 @@ def plot_linear_chart(name_values_map: Dict[str, List[float]],
                       x_labels: Optional[List[str]] = None,
                       y_ticks: Optional[List[float]] = None,
                       y_labels: Optional[List[str]] = None,
-                      axes_limits: Optional[Tuple[float, float, float, float]] = None
-                      ):
+                      axes_limits: Optional[Tuple[float, float, float, float]] = None,
+                      out_file_path: Optional[str] = None,
+                      show_flag: bool = False):
 
     plt.style.use('ggplot')
     colors_list = sns.color_palette(palette="deep", n_colors=(len(name_values_map)))
@@ -55,7 +61,10 @@ def plot_linear_chart(name_values_map: Dict[str, List[float]],
         plt.axis(axes_limits)
     plt.tight_layout()
     plt.subplots_adjust(left=0.060, bottom=0.080, right=0.9890, top=0.940)
-    plt.show()
+    if show_flag:
+        plt.show()
+    if out_file_path:
+        plt.savefig(out_file_path, bbox_inches='tight', dpi=150.0)
     plt.close()
 
 
