@@ -10,7 +10,6 @@ from src.config.config import FB15K237, WN18RR, CODEXSMALL, \
     F1_MACRO, NORM_DIST, ORIGINAL, NOISE_10, NOISE_20, NOISE_30, \
     FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, \
     TOTAL_RANDOM, CONVE
-from src.utils.stats import find_minimum
 
 # set pandas visualization options
 pd.set_option('display.max_rows', 500)
@@ -70,7 +69,7 @@ def get_ranking_list(labels: List[str],
     input:
         labels: ["a", "b", "c", "d"]
         values: [3.3, 1.1, 4.4, 2.2]
-        reverse: False
+        reverse_flag: False
 
     output:
         [("b", 1, 1.1), ("d", 2, 2.2), ("a", 3, 3.3), ("c", 4, 4.4)]
@@ -98,7 +97,7 @@ def get_ranking_diz(labels: List[str],
     input:
         labels: ["a", "b", "c", "d"]
         values: [3.3, 1.1, 4.4, 2.2]
-        reverse: False
+        reverse_flag: False
 
     output:
         {"a": 3, "b": 1, "c": 4, "d": 2}
@@ -123,7 +122,6 @@ if __name__ == '__main__':
     config.read('dataset_local.ini')
     dataset_name = config['dataset_info']['dataset_name']
     n_round = 3
-    board = 0.025
 
     dataset_results_folder_path = datasets_names_results_folder_map[dataset_name]
     assert dataset_name in dataset_results_folder_path
@@ -148,7 +146,7 @@ if __name__ == '__main__':
         else:
             raise ValueError(f"Invalid 'task' in 'dataset_local.ini': '{task}'!")
 
-        reverse = None
+        reverse_flag = None
         task_ranking_diz = {}
 
         for metric in metrics:
@@ -159,20 +157,17 @@ if __name__ == '__main__':
             if metric == HITS_AT_10:
                 prefix = "hits_at_X"
                 deletion_flag = False
-                reverse = True
-
+                reverse_flag = True
             # special case 2
             elif metric == MR:
                 prefix = MR
-                top_y_function = find_minimum
                 deletion_flag = True
-                reverse = False
-
+                reverse_flag = False
             # default case
             else:
                 prefix = metric
                 deletion_flag = False
-                reverse = True
+                reverse_flag = True
 
             print(f"\n{'*' * 80}")
             print(f"\t\t dataset_name: {dataset_name}")
@@ -212,7 +207,7 @@ if __name__ == '__main__':
             for i, noise in zip(range(metric_df.shape[0]), ["0%", "10%", "20%", "30%"]):
                 ranking_diz = get_ranking_diz(labels=list(metric_df.columns),
                                               values=list(metric_df.iloc[i, :].values),
-                                              reverse=reverse)
+                                              reverse=reverse_flag)
                 metric_ranking_diz[noise] = ranking_diz
 
             task_ranking_diz[metric] = metric_ranking_diz
@@ -222,6 +217,7 @@ if __name__ == '__main__':
         print(">>> END of metrics loop! \n")
 
         pprint(task_ranking_diz)
+
         print(f"\n - {task}:")
         task_aggregation_diz = {
             '0%': {'AutoSF': 0, 'BoxE': 0, 'ComplEx': 0, 'ConvE': 0, 'DistMult': 0,
@@ -263,6 +259,7 @@ if __name__ == '__main__':
             for noise, v3 in v2.items():
                 for model, rank in v3.items():
                     final_aggregation_diz[noise][model] += rank / num_metrics / num_tasks
+
     pprint(final_aggregation_diz)
 
     print(f"\n### {dataset_name} ###")
@@ -270,4 +267,4 @@ if __name__ == '__main__':
         print(f"> Noise = {noise}")
         sorted_model_rank_map = {k: v for k, v in sorted(model_rank_map.items(), key=lambda item: item[1])}
         for model, rank_score in sorted_model_rank_map.items():
-            print(f"\t\t {model} : {round(rank_score, 3)}")
+            print(f"\t\t {model} : {round(rank_score, n_round)}")
