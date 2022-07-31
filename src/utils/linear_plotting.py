@@ -46,7 +46,8 @@ def plot_linear_chart(name_values_map: Dict[str, List[float]],
         x_new = np.arange(0, values_sizes[0], 1)
         f1 = interpolate.interp1d(x_new, v)
         plt.plot(x_new, v, 'o', color=color)
-        plt.plot(x_new, f1(x_new), '--', linewidth=1.75, color=color, label=k)
+        # plt.plot(x_new, f1(x_new), '--', linewidth=1.75, color=color, label=k)
+        plt.plot(x_new, f1(x_new), '-', linewidth=2.0, color=color, label=k)
         i += 1
 
     # chart elements definition

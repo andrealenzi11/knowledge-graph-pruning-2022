@@ -64,7 +64,6 @@ if __name__ == '__main__':
                                 "starting from the 'dataset.ini' template!")
     config.read('dataset_local.ini')
     dataset_name = config['dataset_info']['dataset_name']
-    task = config['performance']['task']
     n_round = 3
     board = 0.025
 
