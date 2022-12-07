@@ -4,8 +4,8 @@ from typing import List, Dict, Optional
 
 import pandas as pd
 
-from src.config.config import CONVE, \
-    FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH, RESULTS_DIR
+from src.config.config import RESULTS_DIR, \
+    FB15K237_RESULTS_FOLDER_PATH, WN18RR_RESULTS_FOLDER_PATH, CODEXSMALL_RESULTS_FOLDER_PATH
 
 # set pandas visualization options
 pd.set_option('display.max_rows', 500)
@@ -72,35 +72,34 @@ def compute_ranking(df: pd.DataFrame, round_digits: int = 3) -> Dict[str, float]
 
 
 if __name__ == '__main__':
-
     lp_fn = "link_prediction_both_realistic_results.xlsx"
     tc_fn = "triple_classification_results.xlsx"
     ld_fn = "link_pruning_results.xlsx"
 
     ranking_metrics = [
         "hits_at_X",
-        "hits_at_X_noise_10",
-        "hits_at_X_noise_20",
-        "hits_at_X_noise_30",
+        # "hits_at_X_noise_10",
+        # "hits_at_X_noise_20",
+        # "hits_at_X_noise_30",
         "mr",
-        "mr_noise_10",
-        "mr_noise_20",
-        "mr_noise_30",
+        # "mr_noise_10",
+        # "mr_noise_20",
+        # "mr_noise_30",
         "mrr",
-        "mrr_noise_10",
-        "mrr_noise_20",
-        "mrr_noise_30",
+        # "mrr_noise_10",
+        # "mrr_noise_20",
+        # "mrr_noise_30",
     ]
 
     clf_metrics = [
         "f1_macro",
-        "f1_macro_noise_10",
-        "f1_macro_noise_20",
-        "f1_macro_noise_30",
+        # "f1_macro_noise_10",
+        # "f1_macro_noise_20",
+        # "f1_macro_noise_30",
         "norm_dist",
-        "norm_dist_noise_10",
-        "norm_dist_noise_20",
-        "norm_dist_noise_30",
+        # "norm_dist_noise_10",
+        # "norm_dist_noise_20",
+        # "norm_dist_noise_30",
     ]
 
     # ===== CODEX SMALL ===== #
@@ -130,8 +129,7 @@ if __name__ == '__main__':
     # ===== FB15K237 ===== #
     print("\n\n >>>>>>>>>> FB15K237 <<<<<<<<<<", end="\n\n")
     # > Link Prediction
-    df_fb15k237_lp = \
-        pd.read_excel(os.path.join(FB15K237_RESULTS_FOLDER_PATH, lp_fn), engine="openpyxl").drop(CONVE, axis=1)
+    df_fb15k237_lp = pd.read_excel(os.path.join(FB15K237_RESULTS_FOLDER_PATH, lp_fn), engine="openpyxl")
     df_fb15k237_lp = prep_df(df=df_fb15k237_lp, metrics_to_select=ranking_metrics)
     # > Triple Classification
     df_fb15k237_tc = pd.read_excel(os.path.join(FB15K237_RESULTS_FOLDER_PATH, tc_fn), engine="openpyxl")
