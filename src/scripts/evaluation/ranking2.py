@@ -160,7 +160,7 @@ if __name__ == '__main__':
                             data=[lp_row, tc_row, ld_row])
     aggr_df1 = aggr_df1.reindex(sorted(aggr_df1.columns), axis=1)
     aggr_df1.to_excel(os.path.join(RESULTS_DIR, "aggregation_based_on_task.xlsx"),
-                      encoding="utf-8", engine="openpyxl", index=True)
+                      engine="openpyxl", index=True)
     print(aggr_df1)
 
     # ===== Aggregate based on dataset ===== #
@@ -185,5 +185,5 @@ if __name__ == '__main__':
                             data=[codexs_row, wn18rr_row, fb15k237_row])
     aggr_df2 = aggr_df2.reindex(sorted(aggr_df2.columns), axis=1)
     aggr_df2.to_excel(os.path.join(RESULTS_DIR, "aggregation_based_on_dataset.xlsx"),
-                      encoding="utf-8", engine="openpyxl", index=True)
+                      engine="openpyxl", index=True)
     print(aggr_df2)
