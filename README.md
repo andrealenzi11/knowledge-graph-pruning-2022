@@ -1,12 +1,11 @@
 # knowledge-graph-pruning-2022
 
 Resources for the paper: "A Benchmark Study on Knowledge Graphs Enrichment and
-Pruning Methods in the Presence of Noisy Relationships"
+Pruning Methods in the Presence of Noisy Relationships"<br>
 
+Authors:
 Stefano Faralli
-
 Andrea Lenzi 
-
 Paola Velardi
 
 this repository also contains the supplementary materials pdf:
