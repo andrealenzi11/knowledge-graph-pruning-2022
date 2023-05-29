@@ -80,8 +80,8 @@ def plot_confidences_intervals(label_values_map: Dict[str, Sequence[float]],
     values_sequences = list(label_values_map.values())
     num_intervals = len(labels)
     x_ticks = [int(x) for x in range(1, num_intervals + 1, 1)]
-    plt.xticks(x_ticks, labels)
-    plt.title(title.title().strip())
+    plt.xticks(x_ticks, labels, fontweight="bold")
+    plt.title(title.strip(), fontweight="bold")
     for i, values in zip(x_ticks, values_sequences):
         if use_median:
             center, lo, hi = plot_percentile_interval_median(x_position_index=i,
