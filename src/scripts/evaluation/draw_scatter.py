@@ -18,7 +18,8 @@ def draw_scatter_plot(data_df: pd.DataFrame,
     p = sns.scatterplot(data=data_df,
                         x=x_col,
                         y=y_col,
-                        hue=hue_col)
+                        hue=hue_col,
+                        s=150)
     p.set_title(title, weight='bold').set_fontsize('18')
     _, xlabels = plt.xticks()
     ylabels = [round(y, 1) for y in p.get_yticks().tolist()]
@@ -55,11 +56,12 @@ if __name__ == '__main__':
 
     draw_scatter_plot(
         data_df=df,
-        title="Correlation among Link Prediction and Link Deletion Tasks (Hits@10)",
+        title="Correlation between the LP and LD tasks (Hits@10)",
         x_col="Link Prediction",
         y_col="Link Deletion",
         hue_col="Datasets",
     )
+    exit(0)
 
     hits_10_values = {
         "AutoSF": [0.420, 0.403, 0.412, 0.728, 0.009, 0.302, 0.928, 0.716, 0.972],
